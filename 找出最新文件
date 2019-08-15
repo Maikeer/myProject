@@ -1,0 +1,16 @@
+File latestChangeFile = null;
+					//找出最近修改的图片
+					for (File file : arrayList) {
+//						String name = file.getName();
+//						if(name.compareTo(maxName)>0) {
+//							maxName=name;
+//						}
+						if(!(file.isFile())) continue;
+						if(latestChangeFile == null){
+							latestChangeFile = file;
+						}else{
+							long oldTime = latestChangeFile.lastModified();
+							long newTime = file.lastModified();
+							if(newTime > oldTime) latestChangeFile = file;
+						}
+					}
