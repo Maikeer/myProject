@@ -1,0 +1,39 @@
+package com.rooomy.util;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+public class FileUtil {
+
+	public void copyDirectory(File originDir, String toBaseDir){
+		File[] listFiles = originDir.listFiles();
+		for (File file : listFiles) {
+			File toDir = new File(toBaseDir + File.separator + file.getName());
+			File newFile = new File(toDir.getAbsolutePath());
+			copyFile(file, newFile);
+		}
+	}
+	
+	public void copyFile(File originFile, File newFile){
+		try(FileInputStream fis = new FileInputStream(originFile);
+			FileOutputStream fos = new FileOutputStream(newFile)){
+			byte[] by = new byte[2048];
+			int len;
+			while((len = fis.read(by)) != -1){
+				fos.write(by, 0, len);
+			}
+		}catch (Exception e) {
+			System.out.println("文件拷贝失败 : " + originFile.getAbsolutePath());
+			e.printStackTrace();
+		}
+	}
+	
+}
