@@ -1,0 +1,35 @@
+26-33
+集群之后初始化：
+		1）先启动JN   hadoop-daemon.sh start journalnode 
+		2）选择一个NN 做格式化：hdfs namenode -format   <只有第一次搭建做，以后不用做>
+		3)启动这个格式化的NN ，以备另外一台同步  hadoop-daemon.sh start namenode 
+		4)在另外一台机器中： hdfs namenode -bootstrapStandby
+		5)格式化zk：   hdfs zkfc  -formatZK     <只有第一次搭建做，以后不用做>
+		6) start-dfs.sh	
+
+启动命令
+启动JN   hadoop-daemon.sh start journalnode 
+hadoop-daemon.sh start namenode 启动active的namanode  在node01
+hdfs namenode -bootstrapStandby 启动active的namanode  在node02
+
+start-dfs.sh	启动hdfs集群
+
+搭建：
+			   NN	NN	JN	ZKFC	ZK	DN	RM	NM
+		node01	    *		*	*
+		node02		*	*	*	*	 *		*
+		node03			*		*	 *	 *	*
+		node04					*	 *	 *	*
+	
+start-yarn.sh  能够自动启动nodemanager
+需要手动启动resourcemanager
+yarn-daemon.sh start resourcemanager
+
+
+zkServer.sh start
+start-all.sh  这个就是start-dfs.sh和start-yarn.sh
+yarn-daemon.sh start resourcemanager
+
+集群台数 20-50台
+数据量  条数一天2千万  或者 2亿  1000w 一条2k
+        大小 20g                   20g
