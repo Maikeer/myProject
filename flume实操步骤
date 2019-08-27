@@ -12,3 +12,12 @@ mv apache-flume-1.6.0-bin flume-1.6.0
  
  flume-conf.properties.template这个文件不用修改
  flume-ng version 查看版本
+
+telnet连接主机
+telnet node02 44444  用空格分开不是:
+telnet 退出用ctrl+]才能进行输出
+用quit进行输出
+
+存放在hdfs如果文件夹粒度控制很小的话，比如时分秒的情况了，目录只有四舍没有五入的情况 比如是10s一个那么目录就会是00 10 20 如果是5s的话目录就会是00 05 10
+flume高版本中有一个新的数据源taildirsource 中就有一个断点续传的功能 position_file  这个就会有一个json数据记录我读取了的行号，下次就启动的时候就会读取
+json中的行号，然后从下一行进行读取
