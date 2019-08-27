@@ -1,0 +1,14 @@
+tar -zxvf apache-flume-1.6.0-bin.tar.gz
+mv apache-flume-1.6.0-bin flume-1.6.0
+ cd flume-1.6.0/
+ rm -rf docs/  防止多台传输的时候传输缓慢
+ vim /etc/profile
+ export FLUME_HOME=/opt/software/flume-1.6.0
+ export PATH下面加上后面这段:$FLUME_HOME/bin
+ source /etc/profile
+ mv flume-env.sh.template flume-env.sh 修改配置文件
+ 修改flume-env.sh文件下的java_hone
+ vim 文本中可以使用 : ! ls /usr/java 可以正常使用ls命令查看/usr/java下面的文件夹信息
+ 
+ flume-conf.properties.template这个文件不用修改
+ flume-ng version 查看版本
