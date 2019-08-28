@@ -1,0 +1,5 @@
+TableMapReduceUtil.initTableReducerJob(
+				EventLogConstants.HBASE_NAME_EVENT_LOGS, null, job, null, null,
+				null, null, false);
+        
+        大数据26课上面进行了源码讲解这些为什么为null，和context.write(NullWritable.get(), put);中为什么可以写null
