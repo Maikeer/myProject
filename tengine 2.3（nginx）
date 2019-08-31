@@ -1,0 +1,12 @@
+是因为tengine 2.3以后默认关闭了健康检查
+
+夜曲。 2019/8/31 20:09:25
+需要在安装的时候加一个指令
+
+./configure --prefix=/usr/local/tengine --add-module=./modules/ngx_http_upstream_check_module
+make && make install
+
+最新版开启的方式不太一样，最新是--add-module=modules/ngx_http_upstream_check_module
+
+Steve Yu 2019/8/31 20:12:58
+1.4之前是--with-http_upstream_check_module
