@@ -1,0 +1,13 @@
+list有一个双向链表
+栈 同向命令  先进后出 lpush lpop rpush rpop
+队列 反向命令 先进先出
+ 获取所有的 lrange key 0 -1 双向链表
+ lindex
+ LINDEX k1 1 获取对呀坐标的值
+ 
+ LSET k1 3 xxxx 设置对应坐标的值
+ 
+ lrem k1 2 a 移除k1中两个a 2代表的正向两个 负数的话就是移除反向两个
+ linsert
+
+ 
