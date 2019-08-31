@@ -9,5 +9,95 @@ list有一个双向链表
  
  lrem k1 2 a 移除k1中两个a 2代表的正向两个 负数的话就是移除反向两个
  linsert
+ 多个相同的值都只会在第一个值之前和之后增加
+ LINSERT k1 after d cccc 在d的后面增加
+ LINSERT k1 before d eee 在d的前面增加 
+ 
+ 阻塞 单波队列 fifo先进先出
+ BLPOP ooxx 可以设置多个key timout超时时间 0代表一致阻塞等待  命令的意思就是不管ooxx这个key中是否有数据都会弹出数据，没有就根据超时时间等待
+ ，当这个key有数据时候就会弹出数据，但是他是单波队列，比如两个客户端都在等待相同的key有数据的时候，当第三个客户端传入数据的时候只会有一个拿到数据弹出
+ 另外一个需要下次有数据的时候才会弹出
+ 
+ LPOP k1 弹出数据，当数据弹出完之后，key会自动消失
+ 
+ LTRIM k3 1 -2 删除你指定start stop值进行删除 0 -1 是在最两端，其实是不会删除数据的，删除两头的话应该是 1 -2
+ 当你设置成2 -3的时候其实是会删除两端两个数据，也就是这个命令的意思就是正向删除到你指定的start位置，反向删除到你指定的stop位置
+ 
+ 
+ 
+ hash 类似于hashmap
+ HSET jin money 10000
+ hget
+ HINCRBYFLOAT jin age -1 浮点数计算
+HINCRBY jin age -1 整数计算
+
+ 对filead进行数值计算
+ 使用场景 点赞，收藏，详情页 面向一个事物中需要直接返回一个对象的数据
+ 
+ set 
+ 无序  随机性  
+ 放入的多少不同，元素存储的顺序不同
+ 去重
+ SADD key member [member ...]
+  summary: Add one or more members to a set
+  since: 1.0.0
+
+  SCARD key
+  summary: Get the number of members in a set
+  since: 1.0.0
+
+  SDIFF key [key ...]
+  summary: Subtract multiple sets
+  since: 1.0.0
+
+  SDIFFSTORE destination key [key ...]
+  summary: Subtract multiple sets and store the resulting set in a key
+  since: 1.0.0
+
+  SINTER key [key ...]
+  summary: Intersect multiple sets
+  since: 1.0.0
+
+  SINTERSTORE destination key [key ...]
+  summary: Intersect multiple sets and store the resulting set in a key
+  since: 1.0.0
+
+  SISMEMBER key member
+  summary: Determine if a given value is a member of a set
+  since: 1.0.0
+
+  SMEMBERS key  获取所有的数据，但是一般不要在客户端调用这个命令，因为可能存放很多数据，这样就会消耗网卡的吞吐量，造成其他数据访问变慢
+  summary: Get all the members in a set
+  since: 1.0.0
+
+  SMOVE source destination member
+  summary: Move a member from one set to another
+  since: 1.0.0
+
+  SPOP key [count]
+  summary: Remove and return one or multiple random members from a set
+  since: 1.0.0
+
+  SRANDMEMBER key [count]
+  summary: Get one or multiple random members from a set
+  since: 1.0.0
+
+  SREM key member [member ...]
+  summary: Remove one or more members from a set
+  since: 1.0.0
+
+  SSCAN key cursor [MATCH pattern] [COUNT count]
+  summary: Incrementally iterate Set elements
+  since: 2.8.0
+
+  SUNION key [key ...]
+  summary: Add multiple sets
+  since: 1.0.0
+
+  SUNIONSTORE destination key [key ...]
+  summary: Add multiple sets and store the resulting set in a key
+  since: 1.0.0
+
+ 
 
  
