@@ -38,7 +38,7 @@ HINCRBY jin age -1 整数计算
  无序  随机性  
  放入的多少不同，元素存储的顺序不同
  去重
- SADD key member [member ...]
+ SADD key member [member ...] 增加数据
   summary: Add one or more members to a set
   since: 1.0.0
 
@@ -46,19 +46,20 @@ HINCRBY jin age -1 整数计算
   summary: Get the number of members in a set
   since: 1.0.0
 
-  SDIFF key [key ...]
+  SDIFF key [key ...] 直接输出差集  但是这个key1 key2是有前后之分，前的作为比较数据，后面的作为参考数据，输出的是前面的差集
   summary: Subtract multiple sets
   since: 1.0.0
 
-  SDIFFSTORE destination key [key ...]
+  SDIFFSTORE destination key [key ...] 
   summary: Subtract multiple sets and store the resulting set in a key
   since: 1.0.0
 
-  SINTER key [key ...]
+  SINTER key [key ...] 直接输出交集
   summary: Intersect multiple sets
   since: 1.0.0
 
-  SINTERSTORE destination key [key ...]
+  SINTERSTORE destination key [key ...] 存放交集结果在你指定的key当中  这个方法就省去了只有SDIFF的时候需要存入交集到key的时候需要客户端和redis的
+  交互
   summary: Intersect multiple sets and store the resulting set in a key
   since: 1.0.0
 
@@ -74,15 +75,24 @@ HINCRBY jin age -1 整数计算
   summary: Move a member from one set to another
   since: 1.0.0
 
-  SPOP key [count]
+  SPOP key [count]  取出一个并删除这个值
   summary: Remove and return one or multiple random members from a set
   since: 1.0.0
-
-  SRANDMEMBER key [count]
+随机事件
+  SRANDMEMBER key [count]  count也分为正负零  
+  正数 去除一个去重的结果集（不能超过已有集）
+  负数 去除一个带有重复的结果集，一定满足你要的数量
+  如果 0 不返回
+  可以解决抽奖
+  10个奖品 用户 <10 >10
+  中奖 是否重复
+  奖品大于用户的话 就可以用负数，出现多个重复值
+  如果奖品小于用户的话，就用正数，出现不重复的值，但是这种第二次抽的时候还是可能会抽到之前抽中过的人
+  SRANDMEMBER key 5 -5 10 -10
   summary: Get one or multiple random members from a set
   since: 1.0.0
 
-  SREM key member [member ...]
+  SREM key member [member ...] 移除数据，后面跟的是数据
   summary: Remove one or more members from a set
   since: 1.0.0
 
@@ -90,13 +100,128 @@ HINCRBY jin age -1 整数计算
   summary: Incrementally iterate Set elements
   since: 2.8.0
 
-  SUNION key [key ...]
+  SUNION key [key ...] 直接输出并集
   summary: Add multiple sets
   since: 1.0.0
 
-  SUNIONSTORE destination key [key ...]
+  SUNIONSTORE destination key [key ...] 并集存储到指定的key
   summary: Add multiple sets and store the resulting set in a key
   since: 1.0.0
+  
+  
+  #Sorted_set
+  物理内存左小右大进行排序的，不会随命令发生变化
+  ZRANGE 从小到大取出 加上withscores 就会带着分值
+  ZREVRANGE 从大到小取出
+  集合操作 并集，交集---->权重、聚合指令
+  排序是怎么实现的，增删改查的速度------>使用的是跳跃表skip list 类似于平衡树 增删改查的速度综合评价下来相对最优
+  BZPOPMAX key [key ...] timeout
+  summary: Remove and return the member with the highest score from one or more sorted sets, or block until one is available
+  since: 5.0.0
+
+  BZPOPMIN key [key ...] timeout
+  summary: Remove and return the member with the lowest score from one or more sorted sets, or block until one is available
+  since: 5.0.0
+
+  ZADD key [NX|XX] [CH] [INCR] score member [score member ...]
+  summary: Add one or more members to a sorted set, or update its score if it already exists
+  since: 1.2.0
+
+  ZCARD key
+  summary: Get the number of members in a sorted set
+  since: 1.2.0
+
+  ZCOUNT key min max
+  summary: Count the members in a sorted set with scores within the given values
+  since: 2.0.0
+
+  ZINCRBY key increment member 增加score分组，并且会自动根据分值进行重新排序  场景 歌曲排行榜排序动态变化可以使用这个
+  但是取值的时候 前十名 就可以使用ZREVRANGE反向取出
+  summary: Increment the score of a member in a sorted set
+  since: 1.2.0
+
+  ZINTERSTORE destination numkeys key [key ...] [WEIGHTS weight] [AGGREGATE SUM|MIN|MAX]
+  取得交集
+  summary: Intersect multiple sorted sets and store the resulting sorted set in a new key
+  since: 2.0.0
+
+  ZLEXCOUNT key min max
+  summary: Count the number of members in a sorted set between a given lexicographical range
+  since: 2.8.9
+
+  ZPOPMAX key [count]
+  summary: Remove and return members with the highest scores in a sorted set
+  since: 5.0.0
+
+  ZPOPMIN key [count]
+  summary: Remove and return members with the lowest scores in a sorted set
+  since: 5.0.0
+
+  ZRANGE key start stop [WITHSCORES]
+  summary: Return a range of members in a sorted set, by index
+  since: 1.2.0
+
+  ZRANGEBYLEX key min max [LIMIT offset count]
+  summary: Return a range of members in a sorted set, by lexicographical range
+  since: 2.8.9
+
+  ZRANGEBYSCORE key min max [WITHSCORES] [LIMIT offset count] 根据分值进行取值
+  summary: Return a range of members in a sorted set, by score
+  since: 1.0.5
+
+  ZRANK key member
+  summary: Determine the index of a member in a sorted set
+  since: 2.0.0
+
+  ZREM key member [member ...]
+  summary: Remove one or more members from a sorted set
+  since: 1.2.0
+
+  ZREMRANGEBYLEX key min max
+  summary: Remove all members in a sorted set between the given lexicographical range
+  since: 2.8.9
+
+  ZREMRANGEBYRANK key start stop
+  summary: Remove all members in a sorted set within the given indexes
+  since: 2.0.0
+
+  ZREMRANGEBYSCORE key min max
+  summary: Remove all members in a sorted set within the given scores
+  since: 1.2.0
+
+  ZREVRANGE key start stop [WITHSCORES]
+  summary: Return a range of members in a sorted set, by index, with scores ordered from high to low
+  since: 1.2.0
+
+  ZREVRANGEBYLEX key max min [LIMIT offset count]
+  summary: Return a range of members in a sorted set, by lexicographical range, ordered from higher to lower strings.
+  since: 2.8.9
+
+  ZREVRANGEBYSCORE key max min [WITHSCORES] [LIMIT offset count]
+  summary: Return a range of members in a sorted set, by score, with scores ordered from high to low
+  since: 2.2.0
+
+  ZREVRANK key member
+  summary: Determine the index of a member in a sorted set, with scores ordered from high to low
+  since: 2.0.0
+
+  ZSCAN key cursor [MATCH pattern] [COUNT count]
+  summary: Incrementally iterate sorted sets elements and associated scores
+  since: 2.8.0
+
+  ZSCORE key member
+  summary: Get the score associated with the given member in a sorted set
+  since: 1.2.0
+
+  ZUNIONSTORE destination numkeys key [key ...] [WEIGHTS weight] [AGGREGATE SUM|MIN|MAX]
+  zadd k1 80 tom 60 sean 70 baby
+   zadd k2 60 tom 100 sean 40 yiming
+  ZUNIONSTORE unkey 2 k1 k2 unkey 目标key 这样取得并集是所有人的信息，并且分值是相加的
+  ZUNIONSTORE unkey 2 k1 k2  WEIGHTS 1 0.5  这样取出的并集是所有人的信息，但是分值是根据根据各自权重相乘之后再相加的
+  ZUNIONSTORE unkey 2 k1 k2  AGGREGATE max 这样取出的并集所有人的信息，但是分值是去的最大值的分值
+  summary: Add multiple sorted sets and store the resulting sorted set in a new key
+  since: 2.0.0
+
 
  
 
