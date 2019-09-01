@@ -1,0 +1,18 @@
+静态代理
+动态代理
+jdk的动态代理proxy
+具体实现的代码
+proxycache 动态代理缓存类
+1.jdk反射生成代理必须面向接口，这是由proxy的内部事先决定的
+proxybulder的build方法中调用的defineproxyclass方法才是真正生成代理的类
+proxygenerator真正生成代理类的类使用的方法是generateProxyClass
+jdk动态代理其实就是使用asm来实现的，直接操作二进制码
+使用jdk的动态代理的那个类，必须实现一个接口，并且在代理方法传入参数中必须指定（loader，接口类，invocationhander）
+2.cglb 实现代理不需要接口，但是生成类是final修饰的就无法生成动态类 底层用的也是asm
+  Enhancer增强
+  Enhancer enhancer = new Enhancer();
+        enhancer.setSuperclass(Tank.class);
+        enhancer.setCallback(new TimeMethodInterceptor());
+        Tank tank = (Tank)enhancer.create();
+        tank.move();
+3.instrment比asm更强大，完全控制二进制码，比asm更加复杂
