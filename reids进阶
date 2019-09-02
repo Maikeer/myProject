@@ -1,0 +1,25 @@
+redis.cn中文网站可以进行自学
+yum install nc
+可以连接redis客户端 nc localhost 6379
+可以直接通过管道发送命令 
+echo -e 'set k1 99/n incrn k1/n get k1' |nc localhost 6379
+pubsub
+
+redis_6379.conf中的maxmemory 可以设置内存大小一般在1-10G
+maxmemory 
+lru多久没有使用它（时间维度） lfu使用了多少次（次数维度）
+在缓存使用中一般使用all所有key和设置了有限时间的key的lre方式
+
+设置key有效期
+set k1 aaa ex 20 20s之后过期
+expire k1 50 定时，但是发生写的时候会剔除过期时间
+expireat k1 50 倒计时且，redis不能延长
+1.过期时间不会随着你访问"查询"key而重新设置，他会一直进行减少
+2.如果发生了"写"，会剔除过去时间
+3.业务逻辑自己补全，更新之后需要自己再次设置过期时间
+
+过期判定原理
+1.被动访问时判定
+2，周期轮询判定  增量的
+目的，稍微牺牲下内存，但是保住了reids的性能为王！！！
+可以在reids.cn/command/expire.html查看
