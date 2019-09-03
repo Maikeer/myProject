@@ -24,14 +24,14 @@ redis作为数据库/缓存的区别
 redis作为缓存-------redis里的数据怎么能随着业务的变化，只保留热数据，因为内存是有限的，也就是瓶颈
 
 redis_6379.conf中的maxmemory 可以设置内存大小一般在1-10G
-maxmemory 
+maxmemory 设置的大小到达之后会根据 maxmemory-policy 配置的指令进行配置
 lru多久没有使用它（时间维度） lfu使用了多少次（次数维度）
 在缓存使用中一般使用all所有key和设置了有限时间的key的lre方式
 
 设置key有效期
 set k1 aaa ex 20 20s之后过期
 expire k1 50 定时，但是发生写的时候会剔除过期时间
-expireat k1 50 倒计时且，redis不能延长
+expireat k1 时间戳 倒计时且，redis不能延长
 1.过期时间不会随着你访问"查询"key而重新设置，他会一直进行减少
 2.如果发生了"写"，会剔除过去时间
 3.业务逻辑自己补全，更新之后需要自己再次设置过期时间
