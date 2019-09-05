@@ -19,8 +19,59 @@ fork+ copy on write的方式创建一个子进程  父进程对数据的修改�
  
  弊端
 1.不支持拉链，只有一个dump。rdb，所以必须要运维人员定制定时策略，比如每天把数据拷贝另一个地方，改成相应的日期名
+2.丢失数据，相对多一些，时点与时点之间窗口数据容易丢失 8点得到一个rdb。9点要落地一个rdb，挂机了
+有点
+1.类似于java中的序列化，恢复的速度相对快
+AOF方式
+AOF--------------》redis的写操作记录到文件中------------------------》丢失数据相对少，redis中rdb和aof可以同时开启，但是如果开启了aof，他只会
+用aof恢复-----------》4.0之后，aof中包含rdb全量，增加记录新的写操作
+例如：reids运行了10年，并开启了aof，10年头，redis挂了1.aof多大？-----很大，10T----恢复的时候，会不会溢出---》不会溢出，因为他是线性执行的，要溢出
+早就溢出了，不会记录到日志中去
+2.恢复要多久？---你恢复用5年
+弊端：
+1.体量越来越大---恢复慢------------------》日志，优点如果能保住，还是可以用的，结果L设计一个方案让日志，aof足够小--------》（hdfs中
+fsimage+edits.log（让日志记录的东西写到一个镜像文件里，日志会被清空，镜像就会往前增加时点，从八点变成九点）----让日志只记录增量---
+fsimage一直往前滚，8点--9点--10点，edits.log就一直记录一个小时就滚到fsimage里面去--------合并的过程）
+reids4.0以前的---重写--删除抵消的命令，合并重复的命令-----最终也是一个纯指令的文件
+reids4.0以后的---重写---先将老的数据RDB到aof文件中，再将增量的以指令的方式Append到AOF-----aof是一个混合体，利用了rdb的恢复快，利用了日志的全量
+----比如八点之前的就用rdb数据恢复，八点之后的用aof进行增量恢复
 
-linux系统知识 
+原点：redis是内存数据库----写操作会触发IO-----三个级别可以调1.no2.aways3.每秒    append only mode 在redis_6379.conf里面查看
+
+appendonly yes
+appendfilename “appendonly.aof”
+auto-aof-rewrite-percentage 100  百分百触发重写
+auto-aof-rewrite-min-size 64mb  到了64m触发重写
+redis会记录他最后一次重写的aof文件大小，因为aof文件是一个持续增加的数据，当aof文件数据达到64m或者大于64m的时候，就会自动增加记录到下一个64m满了
+之后再触发重写，以此类推下去
+以下三个涉及到io了，就会影响到redis的性能速度以及数据的完整性
+java---------------内核会对文件描述符8（fd8）开辟一个buffer----java程序想对fd8写数据，他是会先写到这个buffer当中--buffer满了之后内核会向
+磁盘进行刷洗--
+appendfsync always  redis写了一个，写入buffer之后立刻调了一个flush，很可靠，最多就丢失一条
+appendfsync everysec 每秒级别，每秒调用一次flush---最多丢失差一点到一个buffer大小  处于中等
+appendfsync no redis所有一个增删改的操作，写到buffer中（aof文件中）---不会主动调用flush，刷新缓存区buffer---而是听天由命等待内核buffer自己满了
+之后自己刷新缓冲区--弊端，可能会丢失一个buffer大小的数据
+no-appendfsync-no-rewrite no/yes 如果redis抛出一个进程，子进程可能是在进行bgsave，RDB或者是在重写的时候，你的父进程无论你是那个级别他都不会向
+磁盘调用flush刷新这个操作，因为他认为自己的那个进程在对着磁盘发生疯狂的写操作，自己就不能写来参与来争抢io，--这个时候就可能丢失数据---要不要开就看你
+对这个数据敏感性
+aof-load-truncated yes 检查
+
+4.0以后出个这个功能
+aof-use-rdb-preamble yes "重写的时候"之后，先将老的数据RDB到aof文件中，再将增量的以指令的方式Append到AOF    aof文件头有“REDIS”头信息那就是新版本rdb
+-aof混合版  没有就是老版本的
+老版本的4.0之前的
+redis-check-rdb dump.rdb可以查看这个数据库信息
+bgrewriteaof 后天重写aof文件命令 老版本命令
+新版本的4.0之后的
+aof-use-rdb-preamble yes
+bgrewriteaof 重写之后aof文件中就会有个“REDIS”头信息，这个时候的文件就是前面是rdb的全量时点数据文件（加快文件恢复速度），
+后面会明文记录增量的数据操作指令
+bgrewriteaof只有执行之后，之前的数据版本信息就无法再恢复了，因为他已经整合合并了所有的操作语句
+bgsave触发RDB数据输出
+
+
+
+
 管道 |
 ls -l /etc | more 
 1.前一命令的输出作为后命令的输入
