@@ -27,5 +27,6 @@ ooxx：topic&partition   kafka
 我四个client客户端 -----VIP《===LVS hold住流量（keepalive 进行主备切换HA）------hold住连接 反向代理（关注代理层性能）-----------  reids01  reids02两个
                        keepalive 还可以间接监控proxy反向代理的健康状况，当有一台坏了的时候，就把所有的流量执行另外一台好的代理
 
-数据分治之后 分布式锁不能实现
-twemproxy  predixy
+数据分治之后 分布式锁很难实现 也就是聚合操作很难实现 事物
+三种
+twemproxy  predixy 代理方式实现数据分治 Cluster redis集群实现数据分治
