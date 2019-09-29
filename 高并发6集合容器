@@ -1,0 +1,39 @@
+ jmap -dump:format=b,file=jira20190929.dump 750
+ 物理上的储存结果只有两种 连续存储 和 非连续存储 
+                  -----List
+
+容器----collection------Set
+
+                  ------Queue  Dueque双端队列，（一般的都是一边加一边取），这个就是两端可以装，两端可以取
+                  为了实现任务的装载的取和装，这里最重要的就是阻塞put，take，主要是为了高并发所准备的，实现的都是高并发的一种方法
+------------map---
+
+Vector--Hashtable   Collections集合工具类传入一个list，map可以获得一个同步的list和map，等等功能
+hashtable 自带锁，现在基本不用
+cuncurrentHashMap 分段锁 segment  插入的效率比hashmap hashtable低，读取比他们快
+
+queue队列 中concurrentlinkedqueue里面的原子性取东西都是用CAS方式实现的，效率很高 可以实现买票的业务
+
+treeMap用的是红黑树 排序好了的所以查找效率比较高，插入的时候效率也不低
+CAS用在treeMap上面非常复杂，很难实现，所以没有concurrenttreemap这个类
+concurrentskiplistmap  高并发并且排序  跳表是为了排序而加进去的，查找也很快 concurrenthashmap 两者区别 一个有序一个无序
+copyonwritelist copyonwriteset  写时复杂
+copyonwritelist 当write的时候进行复制，当我们要往里面加元素的时候，我们先进行复制一份原来的list，读的时候不加锁，写的时候再原来的基础上
+copy一个原来list长度加一的list，再把新元素放在最后，最后再把原来的引用换到新的list上面      主要用于多特别多，写特别少的时候
+ BlockingQueue  阻塞队列
+  linkedBlockingQueue 无界 ArrayBlockingQueue 有界 DelayBlockingQueue 时间 TransferQueue 传递任务 SynchronusQueue 同步
+  ConcurrentLinkedQueue offer add 添加，返回加入结果 poll取出并去掉 peek拿出之后不会去掉
+    linkedBlockingQueue 用链表实现的BlockingQueue  put take这两个方法是实现了阻塞的，put方法是在满的时候会阻塞住，take方法都是空的时候会阻塞
+    ArrayBlockingQueue
+    put，take，offer，add，poll，peek等对线程友好的方法
+    
+  hashtable----chm
+  vector----queue  list和queue主要的区别是什么， 添加了一些对线程友好的api offer peek poll
+  blockingqueue  有添加了两个 put take---阻塞的方法 主要是实现生产者消费者的模型
+  
+  DelayBlockingQueue 等待时间之后优先执行，里面需要重新判断时间比较的方法，拿取的时候就是拿取最低等待时间的，就是一个按时间紧迫程度进行排序的
+  队列----按时间进行任务调度  内部就是使用PriorityQueue来实现的
+  PriorityQueue  按定义的优先级进行排序 tree模型实现的 二叉树--
+  SynchronusQueue 容量为0，用来一个线程给另一个线程下达任务的 不保存数据，只能进来一个输出一个
+  TransferQueue LinkedTransferQueue 任务传递 transfer方法 放入数据阻塞等着有人取走再走，而add put是放入了之后就走了
+    这个的使用必须先启动消费者，再调用transfer方法  主要用在 我线程需要等待这个任务的结果之后才能进行下一步
