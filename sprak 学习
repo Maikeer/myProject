@@ -1,0 +1,36 @@
+MapReduce 复习
+   访问数据节点需要通过HDFS访问，如果想发生计算，需要先启动一个client独立的进程-------》通过资源层 yarn---------孵化出两个mapTask先通过hdfs然后
+   各种访问自己该访问的具体的那个数据块--------最后map计算完成之后可能会汇聚到一个reduce task里面（可以为多个，这个我们暂时理解为一个）
+术语
+   client启动之后，第一个术语 application-------后续会产生maptask可能多个 reducetask 可能多个（stage步骤阶段 map-stage  reduce-stage）
+   ---有一系列并行的task（maptask reducetask）-----其实他们都是由job启动之后产生的
+比列
+  一个application---1个job
+  一个job----1-2个stage（map reduce 有可能没用reduce）
+  一个stafe----n个task（map reduce reduce是可以人为干预的，map是n个）
+  多个mr的job可以组成作业链
+  
+  复用资源
+   一个application---n个job
+  一个job----1-2个stage（map reduce 有可能没用reduce）
+  一个stafe----n个task（map reduce reduce是可以人为干预的，map是n个）
+  
+  mapTask有三个环节  1.输入环节 input-----textinputformat---可以确定你1.client中可以计算切片的数量，也就是计算map的数量2.maptask中
+  linerecordreader行记录读取器-------计算完成之后会调用我们重写那个map的方法进行传参，然后最终数据一条一条传递给map
+  map计算完成之后再输出，在maptask框架中把map输出的数据收集到outputFile当中，它是保存到本地的
+  
+  map中我们可以做什么事情，过滤filter，（类似与scalar中的map隐射，flatmap也即是数据的切分，隐射成键值对）-----周老师说的关着门的一句话（
+  mapreduce不友好，需要人实现数据迭代逻辑）------------spark就是实现直接数据迭代的方法，我们只需要传递给他一个任务就可以
+  
+  面向数据集有两个逻辑1.我们怎么取迭代 迭代逻辑  2.业务逻辑
+  
+  reducetask中有输入环节---输入之后有reduce方法 （ reducebyKey 通过相同的key为一组，这一组数据调用一次reduce方法）也就是reduce方法被调用的时候
+  只能是相同的key的数据调用它reduce方法一次，让这批数据在reduce方法中迭代，且这一过程其实使用就是一个嵌套迭代器，前边的输入阶段可以对数据源封装出
+  一个迭代器，reduce方法里面在封装一个迭代器，且他们是一个嵌套的关系，-----计算完成之后输出到hdfs作为记录文件
+  
+  如果你有一个笔记本，听歌，上网，打游戏---如果你用的是mapreduce来做这三件事，他是怎么做的，就是先开笔记本，然后听歌，关机---开机 上网 关机
+  --开机 打游戏  关机   偏向于冷启动   如果再中间加了个shuffle对数据进行传递，拉取
+  比如 输入----task----输出  
+  输入-----task----shuffle-write 去取数据源可以衔接 给另一个task  shuffle-read------task---shuffle-write shuffle-read----task----输出到本机
+  或者hdfs或者hbase  最后没有输出的话，前面的操作都是没有意义的，因为他最后没有输出，前面的那些操作如果是在spark里面就是不会执行的
+  --------如果
