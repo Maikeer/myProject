@@ -10,9 +10,9 @@ MapReduce 复习
   一个stafe----n个task（map reduce reduce是可以人为干预的，map是n个）
   多个mr的job可以组成作业链
   
-  复用资源
+  复用资源 spark就是实现了这个模型的
    一个application---n个job
-  一个job----1-2个stage（map reduce 有可能没用reduce）
+  一个job----n个stage
   一个stafe----n个task（map reduce reduce是可以人为干预的，map是n个）
   
   mapTask有三个环节  1.输入环节 input-----textinputformat---可以确定你1.client中可以计算切片的数量，也就是计算map的数量2.maptask中
@@ -32,5 +32,42 @@ MapReduce 复习
   --开机 打游戏  关机   偏向于冷启动   如果再中间加了个shuffle对数据进行传递，拉取
   比如 输入----task----输出  
   输入-----task----shuffle-write 去取数据源可以衔接 给另一个task  shuffle-read------task---shuffle-write shuffle-read----task----输出到本机
-  或者hdfs或者hbase  最后没有输出的话，前面的操作都是没有意义的，因为他最后没有输出，前面的那些操作如果是在spark里面就是不会执行的
-  --------如果
+  或者hdfs或者hbase  最后没有输出的话，前面的操作都是没有意义的，因为他最后没有输出，前面的那些操作如果是在spark里面就是不会执行的，因为最后
+  你没有告诉它最后应该干嘛
+  -------------------------------------
+  一个stage一个阶段以及这个阶段里的task描述的是可以在一台机器顺滑的完成的所有计算---比如在stage0中读取文件记录然后切分中单词，然后再拿出一个
+  单词拼接成单词1这个事情是不需要出这台主机的，也就是说如果是分布式情况下你计算一个块的时候，你不需要别的块把数据拉取过来的，他是可以在一台计算
+  机面向一条记录完成的事情
+  
+  spark中RDD这个数据是可以复用的 每一个RDD都有一个唯一的id 以及在运行job的时候每个stage都会有stage id 然后如果另外一个job在运行的时候复用了
+  一个stage或者RDD的时候，那么只要这个stage或者RDD只要存在或者说参与了之前的计算了，已经有缓存了，那么这个时候就直接可以复用了
+  
+  使用编程模型------面向数据集的操作--RDD 抽象类 弹性的数据集---子类
+  
+  
+    
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
