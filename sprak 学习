@@ -75,8 +75,27 @@ MapReduce 复习
                                              2.在文件数组中，对每一个文件进行一系列操作，拿到文件路径 大小 块的大小 其中还有一个goalsize 
                                              期望的切片大小  最后切片大小是通过 方法算出的 里面就是比较这个期望切片大小和默认块的大小
                                              默认就是 切片的大小就是等于块的大小
-                                             3.
-                                             
+                                             3. 循环逻辑 切片offs偏移量计算 得到切片的主机位 创建切片并添加到splits数组中
+                                             算出你这个文件最终可以切为多少个切片，并每一个切片的元数据都要登记出来，核心的四个维度 
+                                             文件路径 文件切片的起始的偏移量 切片的大小 切片的主机位 切片可以向那台主机移动
+                                          compute方法
+                                             参数 为传入一个partition P 这个参数就决定了它从哪个位置那个块去进行计算
+                                             返回值 iterrator 迭代器 只有调它的hashnext next方法是才会计算执行
+                                              1.new nextiterrator迭代器
+                                                   hasnext方法  getnext方法自己实现自己实现之后才能成功调用next方法
+                                                                  reader recordReader 记录读取器 通过inputformat中的getrecordreader方法获取
+                                                                                       textinputformat 默认返回的是lineRecordReader行记录读取器
+                                                                                       
+                                                                            next方法 传入key value容器，读取文件一行并切割key，value赋值
+                                                                                    返回这个方法是否取到数据
+                                                                   就是预加载，把一条记录加载到key，value中并更新了自己的fainished是否结束
+                                                                   的boolean值，并返回key value
+                                                                 hasnext方法 就是调用getnext方法，更新nextvalue，并返回finished这个值
+                                                                 next方法 就是返回nextValue值
+                                              2.new interrupuibleiterator 迭代器
+                                              这个里面new 没有产生任何计算
+      MapPartitionsRDD
+            flatMap
                                     
       
                                                  
