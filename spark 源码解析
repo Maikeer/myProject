@@ -1,1 +1,13 @@
-
+sprak RDD  create 创建算子   textfile（）
+                             parallelize 创建一个RDD，传入一个数组数据
+           transformation  转换算子  ----map() faltmap() filter() 方法
+                                     ----reducebykey groupbykey 产生shuffle 拉取操作
+                                     
+           action 执行算子                foreach（）
+                                          collect()
+                                          savaasfile()
+           controller 控制算子         Cache 缓存 可以提供后续调用的效率
+                                       保存到磁盘
+                                       checkpoint hdfs，一个外部的储存系统中的
+           
+           
