@@ -1,0 +1,76 @@
+两种方式
+reference count 引用计数  不能解决循环引用的问题 三个对象循环引用，但是没有其他对象指向他，这个时候应该是三个垃圾，但是引用计数是不能回收
+Root Searching 根搜索 根可达
+    根对象，指的是我们现在正在跑的程序的 1.线程栈变量 2.我们引用的静态变量 3. 常量池 4. jni指针引用到的
+垃圾回收算法
+  mark-sweep 标记清楚  缺点容易产生磁盘碎片化 位置不连续
+  copying 拷贝算法  缺点浪费空间  优势没有碎片，位置连续 内存拷贝很快
+  mark-compact 标记压缩 再标记清楚同时做了压缩，整理  优势 没有碎片化 位置连续 也不浪费空间 缺点 效率偏低 因为整理，压缩需要时间 资源拷贝位置
+  需要同步所以效率低
+  
+jvm分代算法模型
+  部分垃圾回收器使用的模型
+new-young 新生代
+  --存货对象少
+  --使用copy算法，效率高
+old 老年代
+  --垃圾少
+  ---一般使用mark compact
+  --G1使用copy
+  jdk1.7还有一个
+priment 永久代
+  jdk1.8改成了
+元数据区metaspace   永久代和元数据区的区别 1.他们都是装class 2.永久代可以必须指定大小限制 元数据区可以设可以不设，无上限 受限于物理内存
+                                           3.字符串常量  1.7是存在永久代  1.8之后是存在堆里了
+                                           4.MethodArea是一个逻辑概念 1.7永久代 1.8元数据区
+堆内存逻辑分区
+  eden（伊甸） survivor survivor 8 ：1 ：1                     tenured（终身） mark compact 算法效率低
+    为什么要有两个survivor区就是为了有利于垃圾回收                 1.顽固分子
+    这个区域的产生的对象多数情况下会被回收                          2.老年代满了FGC full gc
+    1.eden第一次进行gc之后会把活着的对象copy到 survivor s0           
+    2.再次gc的时候除了eden区有活着的 还有s0中的copy 到s1区中去      
+    3.再次gc的时候活着的对象 eden s1 的进入 s0区                  
+    4,年龄足够进行老年代区  15次 CMS 6次
+    5.eden去装不下了直接进入老年代
+    copy算法更好
+     新生代1                                                     老年代 3
+GC Tuning   gc优化 Generation
+  1.尽量减少full gc  就会产生STW 停顿现象 在自动垃圾回收里面是避免不了的，只是垃圾回收算法会优化这个停顿现象
+  2.Minor gc=YGC  MajorGC=FGC
+常见的垃圾回收器
+    Young 新生代，年轻代  回收器                             Epsilon 调试jdk用的
+    Serial 串行回收  ParNew  Parallel 并行的
+     Serial 串行的时候触发gc，停下所有的线程，垃圾回收线程上场，执行回收完之后，其他线程再继续运行 配合cms serialold使用
+     ParNew 也是多个线程并行回收，它是和CMS一起使用的 是配合cms回收器一起使用的也可以和serialold使用
+    Parallel 并行回收 多个线程同时进行回收 配合Serial Old Parallel Old使用
+                                --------G1-----ZGC------Shenandoah  这中间的算法就不分新生代，老年代 都可以用
+                Old老年代的回收器
+    CMS  串行的Serial Old  并行的Parallel Old
+    
+    ConcurrentMarkSweep 用在old老年代的 并发的垃圾回收和应用程序同时运行 ，减低STW的时间 200ms
+    G1  10msSTW
+    ZGC 1msSTW 直接PK C++
+    shenandoan
+    
+    大部分调优都是调的 Serial 串行回收  ParNew 串行的Serial Old  并行的Parallel Old
+     jdk1.8默认的是PS+ParallelOld
+     
+     JVM调优第一步，了解生产环境下的垃圾回收器组合
+       https://docs.oracle.com/javase/8/docs/tech
+     jvm命令分类
+        标准命令 -开头，所有的HotSpot都支持 java -version
+        不标注命令 -X开头 特定版本HotSpot支持特定命令 java -X java -XX:+PrintFlagsFinal 可以打印出所有的指令 你最终生效值
+        不稳定命令 -XX开头 下一版本可能取消
+    java -XX:+UseG1GC 代表你使用的是G1 gc
+    -XX:+PrintCommandLineFlags 指的是当你的系统运行的时候启动的命令行参数是什么
+    -XX:+PrintFlagsFinal 可以打印出所有的指令 你最终生效值 打印出你最终生效的参数值
+    -XX:+PrintFlagsInitial 打印出你的默认值参数值
+
+
+
+
+
+
+
+
+
