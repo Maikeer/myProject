@@ -1,0 +1,23 @@
+javase 数据库-------------精通  http jsp servlet----spring  springmvc
+
+进阶之路
+高并发架构
+  高负载 高可用----LVS Nginx keepalived 高并发多线程
+
+分布式架构
+  CAP 一致性，可用性，分区容错性  RPC 远程控制调用 netty 分布式事务 分布式任务调度 quarz TBS 分布式缓存 redis
+   不能持久化memerycache ehcache-------zookeeper分布式协调服务
+微服务架构
+  springboot springcloud
+源码必读
+  juc spring源码 mybatis源码 springmvc源码 netty源码
+  
+  openResty fastdfs docker kubemetes 亿级流量多级缓存-------项目管理设计 sonarqule jerkins jira findbug
+  
+  大数据架构
+      linux必备 hadoop hive hbase flume sqoop  
+      kyin nifi cloudera 阿里巴巴maxcompute
+      
+      python  spark mlib 机器学习 ---线性回归
+      
+      
