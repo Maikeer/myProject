@@ -1,0 +1,35 @@
+acid 原子性 undolog保证的 一致性  隔离性 锁机制保证的 持久性 redolog保证的
+redo log 前滚记录 innodb存储引擎的日志文件 WAL write ahead log 预写日志 放在内存
+如何保证数据放在内存但是发生掉电的时候数据不丢失
+用户控件中有 log buffer（redolog buffer undo log buffer）中-------------》os buffer（kernel空间）--------fsync同步写----------》写到磁盘当中
+也就是说先进行redolog日志记录，再进行真正的数据溢写说
+ linux中 有user space 和kernel space 用户控件和内核空间 也就是说每次插入数据的时候 是先写道缓存空间的也就是redo log当中 然后再调用系统调用
+ fsync进行数据落地磁盘
+ redo log 是固定大小的，是循环写的过程
+ 提交语句----log buffer中----os buffer----log files
+ 总共有三种方式  1.提交之后 --log buffer中每秒同步到os buffer中---os buffer中--直接调用fsync系统调用写log files
+                 2.提交之后---os buffer直接调用fsync系统调用写----log files
+                 3.提交之后---os buffer 每秒调用fsync系统调用写-----log files
+ undo log  回滚记录
+ 
+ 如果你是delete ，undo log 中记录一条insert语句
+ insert，会记录一条delete语句
+ update，会记录一条相反的uodate语句
+ 
+ binlog---服务端日志文件
+    是server层的日志，主要做mysql功能层面的事情
+   *************************************************
+   与redo log的区别
+    1.redolog是循环写的，空间会用完， bin log是追加写的，不会覆盖之前的日志信息
+    2.redo log是物理日志，记录的是某个数据页做了什么修改 binlog是逻辑日志 记录这个语句的原始逻辑
+    3.redo log 是innodb独有的，binlog是所有引擎都可以使用的
+    *************************************************
+    
+ 备份binlog 
+  考虑你的备份周期
+  恢复数据过程
+  1 找到最近一次的全量备份数据
+  2.从备份时间点开始，讲备份的binlog取出来，重放到要恢复的那个时刻
+  
+  
+  
