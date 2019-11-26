@@ -4,10 +4,13 @@
 ## 1：JVM基础知识
 
 1. 什么是JVM
+   class文件，java类库被classloader加载到内存中会调用 JIT即时编译器或者字节码解释器 进行编译解释 然后调用执行引擎 使用OS硬件进行执行
 2. 常见的JVM
 
 ## 2：ClassFileFormat
-
+ ****课上同学说的64位的时候 long duoble前面加了volatile之后，在多线程问题的时候加了这个修饰符之后，他的写和读取操作都是原子性的
+ ，比如 volatile long l=88;他翻译出来的的putfield指令就是原子性的操作了 java虚拟机底层就会把它当做原子性的来处理
+ cpu层面保证原子性的操作：最早实现是总线锁--之后是MESI保证的
 
 
 ## 3：类编译-加载-初始化
@@ -422,7 +425,7 @@ Direct Memory
 
 
 ## 常用指令
-
+aload_0 把this进行压栈
 store
 
 load
