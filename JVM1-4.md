@@ -152,7 +152,8 @@ CPU为了提高指令执行效率，会在一条指令执行过程中（比如�
 
 https://www.cnblogs.com/liushaodong/p/4777308.html
 WCBuffer
-写操作也可以进行合并  也就是说 cpu计算完成之后，先给L1没有名字缓存会再给L2，因为L2写的速度很慢，当在写的过程中另一个线程经过cpu计算完成之后
+# 写操作
+也可以进行合并  也就是说 cpu计算完成之后，先给L1没有名字缓存会再给L2，因为L2写的速度很慢，当在写的过程中另一个线程经过cpu计算完成之后
 又再次写出值的时候，这个时候cpu会把前一次的计算结果和这次的计算结果在一个新的缓存区中进行合并之后再发送给L2进行输出
 合并写的buffer只有四个位置，当四个位置写满之后就会写道L2上面  一下列子可以证明 一下更改6个值 和 分开更改3个值的 方法比较结果是 分开的更快
 也就是说6个一起的话，会先填满4个之后还有两个等待下次填满才会输出  而分开更改的是一次性填满了四个位置，之后直接输出了
@@ -233,25 +234,66 @@ synchronized实现细节
    X86 : lock cmpxchg / xxx
    [https](https://blog.csdn.net/21aspnet/article/details/88571740)[://blog.csdn.net/21aspnet/article/details/](https://blog.csdn.net/21aspnet/article/details/88571740)[88571740](https://blog.csdn.net/21aspnet/article/details/88571740)
    
+   # java 8大院子操作
+   lock 主内存 表示变量为线程独占
+   unlock 主内存 解锁线程独占变量
+    read 主内存 读取内容到工作内存
+    load 工作内存 read后的值放入线程本地变量副本
+    use 工作内存 传值给执行引擎
+    assign 工作内存 执行引擎结果赋值给线程本地变量
+    store 工作内存 存值到主内存给write备用
+    write 主内存 写变量值
+    # happens-before原则  jvm重排序必须遵守的规则
+    程序次序规则
+    管程规定规则
+    线程启动规则
+    线程终止规则
+    线程中断原则
+    对象结束原则
+    as if serial  不管如何重排序，单线程执行结果不会改变
+   
    ------------------------------------------------------------------------------------------------------------------
    03_02_JavaAgent_AboutObject.md
    # 使用JavaAgent测试Object的大小
+   ## 对象创建过程
+      1.class loading
+      2. class linking --三步 verfication--preparation resolution
+      3.class initializing
+      4.申请对象内存
+      5.成员变量赋默认值
+      6.调用构造方法《init》
+         1.成员变量顺序赋值初始值
+         2.执行构造方法语句
 
 作者：马士兵 http://www.mashibing.com
 
-## 对象大小（64位机）
+## 对象大小（64位机）对象的内存布局
+### markword 64位
+  锁定标志位 2 bit 分代年龄 4 bit 是否偏向锁 1bit  对象的hashcode 23 bit + 2bit =25 bit 
+  他是根据你不同的状态来分配你的64位 8字节的
+  无锁态  对象的hashcode  分代年龄  是否偏向锁 锁标志位
+  轻量级锁  指向栈中锁记录的指针  锁标志位
+  重量级锁  指向互斥量（重量级锁）的指针 锁标志位
+  GC标记   空                 锁标志位
+  偏向锁  线程id EPoch 2位  分代年龄  是否偏向锁  锁标志位
+  为什么GC年龄默认是15？因为对象头中的分代年龄就是4位，最大就是15！
+  ## IdentityHashCode的问题
+
+回答白马非马的问题：
+
+当一个对象计算过identityHashCode之后，不能进入偏向锁状态 因为这个hashcode值以及把偏向锁中存放线程id和epoch的位置以及占了，所以进入不了偏向锁
 
 ### 观察虚拟机配置
 
 java -XX:+PrintCommandLineFlags -version
-
+对象在内存中存储布局？ 答案就是下面两种
 ### 普通对象
 
 1. 对象头：markword  8
 2. ClassPointer指针：-XX:+UseCompressedClassPointers 为4字节 不开启为8字节
 3. 实例数据
    1. 引用类型：-XX:+UseCompressedOops 为4字节 不开启为8字节 
-      Oops Ordinary Object Pointers
+      Oops Ordinary Object Pointers 普通对象指针
 4. Padding对齐，8的倍数
 
 ### 数组对象
@@ -362,9 +404,13 @@ https://cloud.tencent.com/developer/article/1482500
 ## 对象定位
 
 •https://blog.csdn.net/clover_lily/article/details/80095580
+深入理解java虚拟机 周老师的书上有讲
+T t =new T（）； t如何找到这个new对象的
+1. 句柄池   一端指向t，另一端指向new对象  cms三色标记中使用的就是句柄池效率更高
+2. 直接指针 t直接new 对象的地址   hotspot用的就是直接指针
 
-1. 句柄池
-2. 直接指针
+## 对象如何分配
+一个对象先new的时候--尝试往栈上分配，栈上能够分配就在栈上分配，栈一弹出，对象就没有了----如果栈上分配不下而且对象很大，直接分配到堆内存老年代----如果对象不大，线程本地分配，能分配就分配，分配不了就找伊甸区----gc过程，年龄到了就到老年代，年龄没到就gc来gc去
 -----------------------------------------------------------------------------------------------------
 04_JavaRuntimeDataArea_InstructionSet.md
 # Runtime Data Area and Instruction Set
