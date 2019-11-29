@@ -443,7 +443,7 @@ jvms 2.4 2.5
 
 ### JVM Stack
 每个线程都有一个自己jvm stack
-1. Frame ` **每个方法对应一个栈帧** `
+1. Frame **每个方法对应一个栈帧** 
    1. Local Variable Table  局部变量，本地变量
    2. Operand Stack 操作数栈
       对于long的处理（store and load），多数虚拟机的实现都是原子的
@@ -460,7 +460,7 @@ jvms 2.4 2.5
 ### Heap
    jvm有一个堆，在线程中共享
 ### Method Area
-方法去是被所有线程共享的
+方法区是被所有线程共享的
    每一个class里面的结构放在 methad area里面
    方法区是一个逻辑概念，它的具体实现是一下两个：
 1. Perm Space (<1.8)
@@ -492,31 +492,41 @@ jvms 2.4 2.5
 ### 补充：
 基于栈的指令集 相对简单只有压栈，出栈
 基于寄存器的指令集  相对复杂，但是运行快   hotspot的local variable table 本地局部变量池
-
+DCL为什么要使用volital，因为这个地方有可能会指令重排序
 ## 常用指令
-bipush 压栈，并把byte转换成int value
+**非static方法中的局部变量表上会在0号位置上放入一个this**
+sipush 默认就是short也会转换成int类型  比如 int i=200;因为200超过了byte的最大值127
+bipush 压栈，并把byte转换成int value 比如 int i=100
 istore_<n> 比如istore_1 就是把栈上面弹出一个，放到局部变量表上的1号上的位置
 iload_<n> 比如iload_1 就是把局部变量表上的1号上的位置的值进行压栈
 aload_0 把this进行压栈
+new 分配内存--赋值默认值
+dup copy一个this地址放入栈中
 store
-
+iadd 把栈上的两个值进行相加，然后相加值再压入栈中
 load
-
-pop
-
-mul
+iconst_1 从常量池中1这个数值压栈
+if icmpne 取弹出栈中的两个值进行比较，如果不相等，就跳转
+pop 从栈中弹出，因为一个方法1如果有返回值的话，会把返回值压入调用这个方法1的方法2中栈顶中
+isub 弹出栈中两个值并计算差值，再压入栈中
+imul 去栈中两个值进行相加计算并压栈
 
 sub
 
 invoke
 
-1. InvokeStatic
-2. InvokeVirtual
+1. InvokeStatic 调用的静态方法时，使用的是这个
+2. InvokeVirtual 弹出栈中的对象调用非静态方法，自带多态的，final修饰的非静态方法也是 invokeVitual
 3. InvokeInterface
 4. InovkeSpecial
    可以直接定位，不需要多态的方法
-   private 方法 ， 构造方法
+   private 方法 ， 构造方法（过程中，会给局部变量赋初始值）
 5. InvokeDynamic
    JVM最难的指令
    lambda表达式或者反射或者其他动态语言scala kotlin，或者CGLib ASM，动态产生的class，会用到的指令
+   C::n这个代表是一个方法，在java 中会在内部类中创建一个内部类，比如 I i=C::n； 他在class中就会调用 invokeDynamic来
+   for(;;){
+    I i=C::n；
+   }
+   以上这个代码中会产生很多的class，会放在方法区中，methodArea中， 在1.8之前 fullgc是不会回收的，OOM为outofmemory的简称,称之为内存溢出
    
