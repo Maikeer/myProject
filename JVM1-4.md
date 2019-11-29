@@ -425,7 +425,7 @@ jvms 2.4 2.5
 
 ## Runtime Data Area
 
-PC 程序计数器
+### PC 程序计数器 program counter
 
 > 存放指令位置
 >
@@ -441,23 +441,28 @@ PC 程序计数器
 >
 > }
 
-JVM Stack
-
-1. Frame - 每个方法对应一个栈帧
-   1. Local Variable Table
-   2. Operand Stack
+### JVM Stack
+每个线程都有一个自己jvm stack
+1. Frame - $\color{#FF3030}{red}$每个方法对应一个栈帧
+   1. Local Variable Table  局部变量，本地变量
+   2. Operand Stack 操作数栈
       对于long的处理（store and load），多数虚拟机的实现都是原子的
       jls 17.7，没必要加volatile
-   3. Dynamic Linking
+   3. Dynamic Linking 动态链接
+      一个线程有自己的线程栈，每个线程栈里面装着自己的栈帧，每个栈针里面有自己的操作数栈和 动态链接 dynamic linking，
+      指到我们运行时常量池，也就是我们class文件里的常量池的链接，找到这个符号链接，看它有没有解析，如果解析就直接用，没有解析就动态解析
+      也就是A方法里面调用了B方法，那么这个B方法是不是要从常量池中获取，那个这个指向的操作或者链接就是 动态链接
        https://blog.csdn.net/qq_41813060/article/details/88379473 
       jvms 2.6.3
-   4. return address
-      a() -> b()，方法a调用了方法b, b方法的返回值放在什么地方
+   4. return address 返回地址
+      a() -> b()，方法a调用了方法b, b方法的返回值放在什么地方，或者方法执行完了应该回答哪里执行，这个就是返回地址
 
-Heap
-
-Method Area
-
+### Heap
+   jvm有一个堆，在线程中共享
+### Method Area
+方法去是被所有线程共享的
+   每一个class里面的结构放在 methad area里面
+   方法区是一个逻辑概念，它的具体实现是一下两个：
 1. Perm Space (<1.8)
    字符串常量位于PermSpace
    FGC不会清理
@@ -467,25 +472,31 @@ Method Area
    会触发FGC清理
    不设定的话，最大就是物理内存
 
-Runtime Constant Pool
+### Runtime Constant Pool
+   常量值内容在运行的时候是在这个里面的
+### Native Method Stack 等同于java方法自己的栈，我们也无法调优一般接触不到
 
-Native Method Stack
+### Direct Memory 直接内存 用户空间可以直接访问内核空间的内存 1.4版本之后就出现了nio，提高效率
 
-Direct Memory
-
+### 总结：每一个线程有自己的程序计数器Pc JVM Stack Native Method Stack ，他们共享的区域是 堆heap 和 method area （perm space/meta space） 为什么每个线程都有自己PC，因为会有线程切换，需要保留现场下次切换回来的时候知道自己应该继续执行哪里
 > JVM可以直接访问的内核空间的内存 (OS 管理的内存)
 >
 > NIO ， 提高效率，实现zero copy
 
 思考：
-
+### i++和++i的区别在于 i++是先iload后iinc，而++是先iinc后iload的，所以i++返回的i在栈中的值，++i返回的加一之后压回栈的值
 > 如何证明1.7字符串常量位于Perm，而1.8位于Heap？
 >
 > 提示：结合GC， 一直创建字符串常量，观察堆，和Metaspace
 
-
+### 补充：
+基于栈的指令集 相对简单只有压栈，出栈
+基于寄存器的指令集  相对复杂，但是运行快   hotspot的local variable table 本地局部变量池
 
 ## 常用指令
+bipush 压栈，并把byte转换成int value
+istore_<n> 比如istore_1 就是把栈上面弹出一个，放到局部变量表上的1号上的位置
+iload_<n> 比如iload_1 就是把局部变量表上的1号上的位置的值进行压栈
 aload_0 把this进行压栈
 store
 
