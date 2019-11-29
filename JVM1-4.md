@@ -426,6 +426,7 @@ jvms 2.4 2.5
 ## Runtime Data Area
 
 ### PC 程序计数器 program counter
+每个线程一个PC
 
 > 存放指令位置
 >
