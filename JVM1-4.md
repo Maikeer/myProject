@@ -443,7 +443,7 @@ jvms 2.4 2.5
 
 ### JVM Stack
 每个线程都有一个自己jvm stack
-1. Frame - $\color{#FF3030}{red}$每个方法对应一个栈帧
+1. Frame - $\color{red}{红色字}$ 每个方法对应一个栈帧
    1. Local Variable Table  局部变量，本地变量
    2. Operand Stack 操作数栈
       对于long的处理（store and load），多数虚拟机的实现都是原子的
