@@ -1,0 +1,53 @@
+首先查询下机器的cpu情况，我使用的机器是，物理cpu个数=2，每个物理cpu中core个数=2
+所以是4核。
+下面是具体的启动参数以及具体的解释：
+
+-Xmx1024M 最大堆内存
+-Xms1024M 初始化堆内存，正常和最大堆内存相同，减少动态改变的内存损耗
+-Xmn384M 年轻代内存
+-XX:PermSize=128M 初始化持久代内存
+-XX:MaxPermSize=256M 最大持久代内存
+-XX:SurvivorRatio=8 年轻代比例 8:1:1
+
+-XX:+PrintGCDetails 打印gc信息，可参考gc的比例进行调优
+-XX:MaxDirectMemorySize=128M 比如netty的零copy会使用到直接内存，一般System.gc()会回收，但是如果DisableExplicitGC开启，会将System.gc()转为空，不会回收这部分内存，如果启用了cms，会对直接堆外内存回收
+-XX:+DisableExplicitGC System.gc()不可用
+-XX:+UseConcMarkSweepGC 老年代使用cms，标记-清除算法会产生碎片
+-XX:+UseParNewGC 年轻代使用并行收集器
+
+-XX:+UseCMSCompactAtFullCollection 和下面的配合使用，开启碎片整理
+-XX:CMSFullGCsBeforeCompaction=10 10次fullgc后开始内存空间压缩
+-XX:+CMSParallelRemarkEnabled cms收集过程初始标记、并发标记、预清理、可中断预清理、最终标记、并发清除、并发重置，在最终标记中遍历区域较多，开启并行收集。
+
+-XX:+UseCMSInitiatingOccupancyOnly 开启，使用下面的值
+-XX:CMSInitiatingOccupancyFraction=70 对内存占用70%执行cms
+
+-XX:+CMSClassUnloadingEnabled 清理持久代
+
+-XX:+HeapDumpOnOutOfMemoryError oom会将堆信息dump
+-XX:HeapDumpPath=/opt/log/tomcat/10-sdk/dump/heap.hprof dump文件地址
+
+-XX:+PrintGCDateStamps 打印gc时间
+
+-XX:TargetSurvivorRatio=90 s区达到90%自动计算转到老年代的age
+-XX:MaxTenuringThreshold=15 年轻代到老年代的最大age
+
+-XX:-ReduceInitialCardMarks 解决gc bug
+
+-Dcom.sun.management.jmxremote.authenticate=true 开启用户认证
+-Dcom.sun.management.jmxremote.ssl=false 禁止ssl连接
+-Dcom.sun.management.jmxremote
+-Dcom.sun.management.jmxremote.access.file=../shared/conf/jmxremote.access 用户名
+-Dcom.sun.management.jmxremote.password.file=../shared/conf/jmxremote.password 密码
+
+-Djava.rmi.server.hostname=xxx
+
+-Dcatalina.base=/opt/oracle/tomcat/t-10 设置tomcat目录
+
+-Xdebug 支持debug
+-Xrunjdwp:transport=dt_socket,address=9910,server=y,suspend=n 设置debug参数
+
+-Djava.util.logging.config.file=/opt/oracle/tomcat/t-10/conf/logging.properties 日志配置文件
+-Dfile.encoding=UTF8 设置文件编码
+
+-Djava.io.tmpdir=/opt/oracle/tomcat/t-10/temp 临时文件目录，java代码中可以使用System.getProperties("java.io.tmpdir")来获取
