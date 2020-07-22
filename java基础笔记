@@ -1,0 +1,25 @@
+1.一个对象 包含三个部分  对象头 + 实例数据 + 对齐填充（通常是8字节或者8字节的倍数进行填充）
+2.一个对象头包含 mark kclass 如果是数据还要包括 数组长度  mark字段（4个字节） kclass引用（系统开启压缩指针4个字节，不开启就是8个字节，默认开启压缩） 黄师傅说的赶紧有误
+应该mark字段是8字节 64位
+
+普通对象
+对象头：markword 8
+ClassPointer指针：-XX:+UseCompressedClassPointers 为4字节 不开启为8字节
+实例数据
+引用类型：-XX:+UseCompressedOops 为4字节 不开启为8字节 Oops Ordinary Object Pointers 普通对象指针
+Padding对齐，8的倍数
+
+数组对象
+对象头：markword 8
+ClassPointer指针同上
+数组长度：4字节
+数组数据
+对齐 8的倍数
+
+锁定标志位 2 bit 分代年龄 4 bit 是否偏向锁 1bit 对象的hashcode 23 bit + 2bit =25 bit 他是根据你不同的状态来分配你的64位 8字节的 
+无锁态 对象的hashcode 分代年龄 是否偏向锁 锁标志位
+轻量级锁 指向栈中锁记录的指针 锁标志位
+重量级锁 指向互斥量（重量级锁）的指针 锁标志位
+GC标记 空 锁标志位 
+偏向锁 线程id EPoch 2位 分代年龄 是否偏向锁 锁标志位 
+为什么GC年龄默认是15？因为对象头中的分代年龄就是4位，最大就是15！
