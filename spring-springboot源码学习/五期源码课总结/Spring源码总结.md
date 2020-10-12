@@ -59,6 +59,12 @@ Spring源码总结
 1.prepareRefresh   做些准备工作 1.设置当前spring启动的时间2.设置关闭和开启的标志位3.获取当前的环境对象并设置环境对象的属性值4.设置监听器以及需要发布的事件的集合
 
 2.obtainFreshBeanFactory  1.创建容器对象，DefaultListableBeanFactory 2.加载xml配置文件的属性值到当前工厂中，最重要的就是BeanDefinition
+ loadBeanDefinitions 加载bean定义信息2.1创建一个xml的beanDefinitionReader并设置环境对象等属性值，
+ 再初始化beanDefinitionReader对象，此处设置配置文件是否进行验证（initBeanDefinitionReader），
+ 最后开始完成beanDefinitionReader的加载（loadBeanDefinitions）--1.以resource的方式获取配置文件的位置2.以String的方式获取配置文件的位置
+ reader.loadBeanDefinitions(configLocations)---ResourcePatternResolver资源匹配解析器
+ ((ResourcePatternResolver) resourceLoader).getResources(location)调用默认的resourceLoader完成具体的resource定位---再对resource数组进行一个一个的处理，并且开始对配置文件进行读取，
+ ---doLoadBeanDefinitions 实际读取的操作，这个方法里面doLoadDocument方法获取xml文件的document对象，解析过程就是由documentloader完成的，从string-resource[]-resource,最终开始讲resource读取成一个document文档，根据文档的节点信息封装成一个个的beanDefinition，registerBeanDefinitions方法1.创建一个BeanDefinitionDocumentReader对象2.获取countBefore3.开始真正执行document读取并封装beanDefinition（delegate委派，委托--获取命名空间---解析xml前处理--真正解析xml parseBeanDefinitions此方法就是真正解析xml的他有1.默认标签解析和自定义标签的解析--解析xml后处理）
 
 3. prepareBeanFactory 准备beanFactory，初始化bean工厂，设置属性值 EL表达式 设置Aware接口 细节暂时略过
 4. postProcessBeanFactory 扩展操作
