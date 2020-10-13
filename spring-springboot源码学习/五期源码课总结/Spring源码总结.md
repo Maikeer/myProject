@@ -57,6 +57,7 @@ Spring源码总结
 
 ```
 1.prepareRefresh   做些准备工作 1.设置当前spring启动的时间2.设置关闭和开启的标志位3.获取当前的环境对象并设置环境对象的属性值4.设置监听器以及需要发布的事件的集合
+ initPropertySources 方法上 WebApplicationContextUtils#initServletPropertySources为什么会被自动调用，是因为 StandardServletEnvironment 类覆写了initPropertySources方法并在方法中调用了initServletPropertySources方法，这个就是web项目默认创建的环境对象
 
 2.obtainFreshBeanFactory  1.创建容器对象，DefaultListableBeanFactory 2.加载xml配置文件的属性值到当前工厂中，最重要的就是BeanDefinition
  loadBeanDefinitions 加载bean定义信息2.1创建一个xml的beanDefinitionReader并设置环境对象等属性值，
