@@ -92,9 +92,20 @@ Spring源码总结
 
 修改。。。
 
+##### 2.进行自定义标签处理过程扩展
+
 如果需要自定义标签的话，应该做以下步骤：
 
-1.创建一个对月的解析器处理类，（在init方法中添加parser类）
+从源代码中可以查看
+
+```
+BeanDefinitionParserDelegate类中的parseCustomElement方法中
+NamespaceHandler handler = this.readerContext.getNamespaceHandlerResolver().resolve(namespaceUri);可以总结出我们自定义是需要创建一个自己对应的解析器处理器handler
+
+根据ContextNamespaceHandler中init方法中都是注册对应的Parser处理类，可知我们也需要创建对应的Parser处理类，并在自定义解析器处理类中init方法中添加parser处理类
+```
+
+1.创建一个对应的解析器处理类，（在init方法中添加parser类）
 
 2.创建一个普通的spring.handlers配置文件，让应用程序能够完成加载工作
 
