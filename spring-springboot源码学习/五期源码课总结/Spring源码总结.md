@@ -66,8 +66,16 @@ Spring源码总结
  reader.loadBeanDefinitions(configLocations)---ResourcePatternResolver资源匹配解析器
  ((ResourcePatternResolver) resourceLoader).getResources(location)调用默认的resourceLoader完成具体的resource定位---再对resource数组进行一个一个的处理，并且开始对配置文件进行读取，
  ---doLoadBeanDefinitions 实际读取的操作，这个方法里面doLoadDocument方法获取xml文件的document对象，解析过程就是由documentloader完成的，从string-resource[]-resource,最终开始讲resource读取成一个document文档，根据文档的节点信息封装成一个个的beanDefinition，registerBeanDefinitions方法1.创建一个BeanDefinitionDocumentReader对象2.获取countBefore3.开始真正执行document读取并封装beanDefinition（delegate委派，委托--获取命名空间---解析xml前处理--真正解析xml parseBeanDefinitions此方法就是真正解析xml的他有1.默认标签解析和自定义标签的解析--解析xml后处理）
+ ignoreDependencyInterface 略过的类，为什么要略过，因为之前添加的BPP已经对这些进行处理了
+ registerResolvableDependency 设置自动装备的特殊规则，挡在进行ioc初始化的，如果有多个试下，那么使用指定的对象进行注入
 
 3. prepareBeanFactory 准备beanFactory，初始化bean工厂，设置属性值 EL表达式 设置Aware接口 细节暂时略过
+	在添加addPropertyEditorRegistrar属性编辑器注册的时候，可以总结我们需要自定义属性编辑器时候
+	1.首先创建一个自定义的EditorRegistrar
+	2.创建一个自定义的实现了PropertyEditorSupport的Editor，覆写setAsText方法（为什么是覆写这个方法呢？实例化对象中设置属性的方法中可以找到populateBean---->applyPropertyValues---->convertForProperty最后调用的就是setAsText方法）并在自定义EditorRegistrar中registerCustomEditors方法中进行注册		
+	doRegisterEditor操作（registerCustomEditors方法具体是在哪里被调用的，请看下面调用图1）
+	3.如何让spring识别我们自定义的EditorRegistrar 这个时候就需要找到CustomEditorConfigurer（它是在什么时候被执行的？invokeBeanFactoryPostProcessors方法中PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors里面进行执行的）在
+	它里面有个propertyEditorRegistrars数组集合，它也是一个BFPP所以他可以让这些自定义编辑器注册可以就加入beanFactory里面，让spring能够识别他们
 4. postProcessBeanFactory 扩展操作
 5. invokeBeanFactoryPostProcessors 执行BFPP 实例化并且执行所有注册的BFPP，在单列对象实例化之前必须要调用
 6. registerBeanPostProcessors 实例化并且注册BPP
@@ -110,6 +118,64 @@ NamespaceHandler handler = this.readerContext.getNamespaceHandlerResolver().reso
 2.创建一个普通的spring.handlers配置文件，让应用程序能够完成加载工作
 
 3.创建对应标签的parser类
+
+[^调用图1]: 
+
+```
+
+```
+
+反射进行值处理的两种方法：1.获取该属性对象的set方法进行赋值操作2.获取该对象的Filed的set方法设置
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
