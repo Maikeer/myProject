@@ -107,8 +107,6 @@ Spring源码总结
 
 #### 为什么要使用三级缓存？因为getEarlyBeanReference这个方法中，BPP，因为spring中的aop是在beanPostProcessor实现的，所以当对象需要代理的时候，就需要三级缓存才能实现了
 
-修改。。。
-
 ##### 2.进行自定义标签处理过程扩展
 
 如果需要自定义标签的话，应该做以下步骤：
