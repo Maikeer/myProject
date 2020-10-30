@@ -87,6 +87,10 @@ Spring源码总结
 	AnnotatedBeanDefinitionReader类，在new的构造方法中调用父类方法中通过
 	AnnotationConfigUtils进行加载的internalConfigurationAnnotationProcessor
 	非springboot项目的话就是通过解析<context:component-scan>标签解析的时候进行加载的
+	5.3：提问为什么要重复获取beanFactory.getBeanNamesForType方法，因为在每次执行 	
+	invokeBeanDefinitionRegistryPostProcessors方法的时候都可能重新注册新的BFRPP进去，而在执行
+	invokeBeanFactoryPostProcessors方法的时候，beanFactory是不能再注册beanDefinition信息的
+	5.4：invokeBeanDefinitionRegistryPostProcessors执行的时候		 	 					ConfigurationClassPostProcessor类中postProcessBeanDefinitionRegistry方法调用的processConfigBeanDefinitions方法会有对Configuration@Import@ComponentScan@PropertySource @Bean等注解的解析
 6. registerBeanPostProcessors 实例化并且注册BPP
 7. initMessageSource 国际化设置
 8. initApplicationEventMulticaster 初始化广播事件
