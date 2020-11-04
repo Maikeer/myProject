@@ -68,7 +68,9 @@ Spring源码总结
  ---doLoadBeanDefinitions 实际读取的操作，这个方法里面doLoadDocument方法获取xml文件的document对象，解析过程就是由documentloader完成的，从string-resource[]-resource,最终开始讲resource读取成一个document文档，根据文档的节点信息封装成一个个的beanDefinition，registerBeanDefinitions方法1.创建一个BeanDefinitionDocumentReader对象2.获取countBefore3.开始真正执行document读取并封装beanDefinition（delegate委派，委托--获取命名空间---解析xml前处理--真正解析xml parseBeanDefinitions此方法就是真正解析xml的他有1.默认标签解析和自定义标签的解析--解析xml后处理）
  ignoreDependencyInterface 略过的类，为什么要略过，因为之前添加的BPP已经对这些进行处理了
  registerResolvableDependency 设置自动装备的特殊规则，挡在进行ioc初始化的，如果有多个试下，那么使用指定的对象进行注入
-
+	 2.3
+	 org.springframework.context.annotation.internalConfigurationAnnotationProcessor
+	等等这些类是在xml中<context:component-scan/>解析中进行加载的
 3. prepareBeanFactory 准备beanFactory，初始化bean工厂，设置属性值 EL表达式 设置Aware接口 细节暂时略过
 	在添加addPropertyEditorRegistrar属性编辑器注册的时候，可以总结我们需要自定义属性编辑器时候
 	1.首先创建一个自定义的EditorRegistrar
@@ -91,7 +93,9 @@ Spring源码总结
 	invokeBeanDefinitionRegistryPostProcessors方法的时候都可能重新注册新的BFRPP进去，而在执行
 	invokeBeanFactoryPostProcessors方法的时候，beanFactory是不能再注册beanDefinition信息的
 	5.4：invokeBeanDefinitionRegistryPostProcessors执行的时候		 	 					ConfigurationClassPostProcessor类中postProcessBeanDefinitionRegistry方法调用的processConfigBeanDefinitions方法会有对Configuration@Import@ComponentScan@PropertySource @Bean等注解的解析
+	5.5在解析import中导入的类AutoConfigurationImportSelector，存放之后，最后会在ConfigurationClassParser的parse方法里面的this.deferredImportSelectorHandler.process();方法里面会调用到getAutoConfigurationEntry方法，这个方法里面会调用到getAttributes方法里面会调用getCandidateConfigurations方法就是加载META-INF/spring.factories中EnableAutoConfiguration对应的实现类
 6. registerBeanPostProcessors 实例化并且注册BPP
+	6.1 找到实现了beanpostprocessor接口的实现类
 7. initMessageSource 国际化设置
 8. initApplicationEventMulticaster 初始化广播事件
 9. onRefresh
