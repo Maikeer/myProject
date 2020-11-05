@@ -94,8 +94,14 @@ Spring源码总结
 	invokeBeanFactoryPostProcessors方法的时候，beanFactory是不能再注册beanDefinition信息的
 	5.4：invokeBeanDefinitionRegistryPostProcessors执行的时候		 	 					ConfigurationClassPostProcessor类中postProcessBeanDefinitionRegistry方法调用的processConfigBeanDefinitions方法会有对Configuration@Import@ComponentScan@PropertySource @Bean等注解的解析
 	5.5在解析import中导入的类AutoConfigurationImportSelector，存放之后，最后会在ConfigurationClassParser的parse方法里面的this.deferredImportSelectorHandler.process();方法里面会调用到getAutoConfigurationEntry方法，这个方法里面会调用到getAttributes方法里面会调用getCandidateConfigurations方法就是加载META-INF/spring.factories中EnableAutoConfiguration对应的实现类
-6. registerBeanPostProcessors 实例化并且注册BPP
+6. registerBeanPostProcessors 实例化并且注册BPP  下面有图片补充，几个比较重要是接口
 	6.1 找到实现了beanpostprocessor接口的实现类
+	6.2为什么要在计算beanProcessorTargetCount值的时候+1，因为下面会添加一个检查的BPP
+		BeanPostProcessorChecker用于检查并记录日志 isInfrastructureBean判断是或否是
+		beanDefinition中定义的三种role  0用户自定义bean角色类型 1某些复杂配置类型 2spring内部使用的bean角色
+	6.3 ApplicationListenerDetector在最后还要添加一次，因为需要把它放在最后用于检查
+	  内部的ApplicationListeners bean
+	
 7. initMessageSource 国际化设置
 8. initApplicationEventMulticaster 初始化广播事件
 9. onRefresh
@@ -142,9 +148,9 @@ NamespaceHandler handler = this.readerContext.getNamespaceHandlerResolver().reso
 
 反射进行值处理的两种方法：1.获取该属性对象的set方法进行赋值操作2.获取该对象的Filed的set方法设置
 
+关于第6点registerBeanPostProcessors 实例化并且注册BPP 补充图片
 
-
-
+![image-20201105225143793](D:\GitHub\myProject\spring-springboot源码学习\五期源码课总结\iamges\image-20201105225143793.png)
 
 
 
