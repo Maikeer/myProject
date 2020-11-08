@@ -102,9 +102,10 @@ Spring源码总结
 	6.3 ApplicationListenerDetector在最后还要添加一次，因为需要把它放在最后用于检查
 	  内部的ApplicationListeners bean
 	
-7. initMessageSource 国际化设置
-8. initApplicationEventMulticaster 初始化广播事件
-9. onRefresh
+7. initMessageSource 国际化设置 配合spring mvc之后就有意义了
+8. initApplicationEventMulticaster 初始化事件监听多路广播事件
+	8.1有自定义的就用自定义的，没有就用默认的SimpleApplicationEventMulticaster
+9. onRefresh 留给子类初始化其他的bean
 10. registerListeners 注册监听器
 11. finishBeanFactoryInitialization 实例化所有非懒加载的单列对象
     11.1 实例化转换器服务，添加嵌入的解析器，初始化代理织入的前期准备，固定配置（设置以后不再需要改变的）
@@ -115,6 +116,7 @@ Spring源码总结
     11.6 initializeBean 方法中的invokeAwareMethods方法执行aware填充--applyBeanPostProcessorsBefore 执行初始化之前的方法------invokeInitMethods 执行初始化方法-----applyBeanPostProcessorsAfterInitialization 执行初始化之后的方法
     11.7 getObjectForBeanInstance  因为bean对象可能是工厂，所以方法最终调用 object = factory.getObject();
 12. finishRefresh 
+	12.1 publishEvent 事件源发布事件，使用多播器来遍历选出合适的监听器对事件进行处理
 ```
 
 构造器循环依赖解决不了，set循环依赖可以解决，当实例化和初始化分开的时候是可以解决循环依赖的
@@ -151,6 +153,68 @@ NamespaceHandler handler = this.readerContext.getNamespaceHandlerResolver().reso
 关于第6点registerBeanPostProcessors 实例化并且注册BPP 补充图片
 
 ![image-20201105225143793](D:\GitHub\myProject\spring-springboot源码学习\五期源码课总结\iamges\image-20201105225143793.png)
+
+##### 事件驱动
+
+传统  被观察者  观察者
+
+spring 事件（被观察者具体要执行的动作）  监听器：观察者，可能存在多个，接收不同的事件来做出不同的处理工作
+
+  多播器 ：被被观察者遍历观察者通知消息的操作拿出来委托给一个多播器来进行消息通知，或者说通过观察者进行不同的操作
+
+ 事件源：谁来调用或者执行发布具体的事件
+
+##### 逻辑执行过程
+
+1.事件源来发布不同的事件
+
+2.当发布事件之后调用多播器的方法来进行事件广播操作，由多播器去触发具体的监听器去执行操作
+
+3.监听器接收到具体的事件之后，可以验证匹配是否能处理当前事件，如果可以直接处理，如果不行，不做任何操作
+
+##### 实际代码处理
+
+1.提前准备多个事件
+
+2.初始化多播器 创建多播器对象，此多播器对象中应该包含一个监听器集合
+
+3.准备好一系列的监听器
+
+4.向多播器中注册进去已有的监听器
+
+5，准备事件发布，来通知多播器循环调用监听器进行相关的逻辑处理工作
+
+##### 扩展信息 springboot 在初始化EventPublishingRunListener的时候，对initialMuticaster进行初始化创建的，而在源码中通过beanutils类对EventPublishingRunListener进行构造方法初始化的代码，在spring的初始化bean过程中早已实现写好了的
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
