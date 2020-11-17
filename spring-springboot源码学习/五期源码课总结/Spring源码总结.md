@@ -88,6 +88,7 @@ Spring源码总结
 	AnnotationConfigServletWebServerApplicationContext类的时候需要new 		     
 	AnnotatedBeanDefinitionReader类，在new的构造方法中调用父类方法中通过
 	AnnotationConfigUtils进行加载的internalConfigurationAnnotationProcessor
+	ConfigurationClassUtils.checkConfigurationClassCandidate 判断是否是一个配置类，并设置full或lite属性
 	非springboot项目的话就是通过解析<context:component-scan>标签解析的时候进行加载的
 	5.3：提问为什么要重复获取beanFactory.getBeanNamesForType方法，因为在每次执行 	
 	invokeBeanDefinitionRegistryPostProcessors方法的时候都可能重新注册新的BFRPP进去，而在执行
