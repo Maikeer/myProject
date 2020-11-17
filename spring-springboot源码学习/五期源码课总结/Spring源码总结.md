@@ -187,9 +187,46 @@ spring 事件（被观察者具体要执行的动作）  监听器：观察者�
 
 ##### 扩展信息 springboot 在初始化EventPublishingRunListener的时候，对initialMuticaster进行初始化创建的，而在源码中通过beanutils类对EventPublishingRunListener进行构造方法初始化的代码，在spring的初始化bean过程中早已实现写好了的
 
+#### 11 finishBeanFactoryInitialization Bean的创建过程  
 
+getbean------dogetbean----createbean----docreatebean
 
+BFPP BPP里面都调用过getbean   
 
+11.1 设置初始化上下文类型转换器  ConversionService 和之前的自定义editor一样，但是editor的setAsText方法中转换的是string的类型数据，如果我需要把其他类型的数据转换成其他类型的对象，这个时候editor就无法完成，这个时候就需要 ConversionService来实现了  转换服务中会提前准备一系列的转换器converter用于完成转换服务  ，可以在官网3.4可以查看如何添加我们自定义的converter
+
+##### 转换服务可以实现这三个接口 converterFactory n对n  converter 1对1  GenericConverter 1对多
+
+11.2 如果beanfactory之前没有注册嵌入值解析器，则注册默认的嵌入值解析器，主要用于注解属性值的解析  beanFactory.hasEmbeddedValueResolver() 什么时候完成的EmbeddedValueResolver的初始化注册的？BFPP PropertyPlaceholderConfigurer在invoke里面会被调用addEmbeddedValueResolver
+
+```
+PropertyPlaceholderConfigurer是在什么被加载，或者找到的？？
+```
+
+11.3尽早初始化LoadTimeWeaverAware bean，以便尽早注册他们的转换器
+
+11.4设置一个临时的类加载器进行类型匹配
+
+11.5冻结所有的bean定义，说明注册bean定义将不被修改或任何进一步处理
+
+##### 11.6开始实例化剩下的单列对象 preInstantiateSingletons
+
+```
+1.beanDefinition------》RootBeanDefinition和GenericBeanDefinition
+2.getMergedLocalBeanDefinition 返回的都是RootBeanDefinition，就是为了整合指定的parent父容器中的数据，---意义在于在实例化之前把所有的基础的beanDefinition对象转换成RootBeanDefinition对象，进行缓存，后续在需要马上要实例化的时候，直接获取定义信息，而定义信息中如果包含了父类，那么必须要先创建父类才能有子类，父类如果没有的话，子类怎么创建？
+    刚刚在进行使用的时候，使用了递归的方式进行调用，问题是，递归调用的过程是什么样的？
+    1.先从缓存中获取，缓存中有直接返回
+    2.缓存中没有，提前创建
+3.isFactoryBean 是否实现了FactoryBean
+	beanFactory 和factoryBean的区别？
+	都是对象工厂，用来创建对象，如果使用beanFactory的接口，那么必须要严格遵守springbean的生命周期接
+	口，从实例化到初始化，到invokeAwareMethod,invokeInitMethod,before,after此流程非常复杂且麻	烦，如果需要一种更加便捷简单的方式创建，怎么办？所有有了FactoryBean这个接口，不需要遵循此创建顺序
+	factoryBean 提供了三个方法  isSington是否单列 getObject返回对象 getObjectType返回类型
+4. getBean &beanName 这个方法是创建由spring生命周期的对象，保存在一级缓存中
+	当使用FactoryBean接口来创建对象的时候一共创建了两个对象。一个是实现了FactoryBean接口的子类对	象。一个是通过getObject方法返回的对象。两个对象都有spring管理，但是注意了，存放对象的缓存集合不		同，实现了FactoryBean接口的对象在一级缓存，但是调用getobject方法获取的对象造			
+	factorybeanobjectcache，如果不是单列对象的话，那么需要每次调用的时候重新创建，缓存中不会保存当	前对象
+5. 创建对象的方式new 反射  factoryMethod supplier
+```
 
 
 
