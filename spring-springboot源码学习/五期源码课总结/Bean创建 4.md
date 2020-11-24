@@ -77,3 +77,81 @@ applyMergedBeanDefinitionPostProcessors(mbd, beanType, beanName)
 
 ##### applyMergedBeanDefinitionPostProcessors方法和实例化之前的beanFactory.freezeConfiguration()冻结所有的bean定义，说明注册的bean定义将不被修改或任何进一步的处理两个是有区别的，前者是在实例化之后对bean进行最后的一次修改，后者是为了让bean在创建之前不再被修改或者改变
 
+# Bean创建过程 5
+
+加载注解 的相关解析配置工作
+
+CommonAnnotationBeanPostProcessor处理@Resource----》InitDestroyAnnotationBeanPostProcessor处理@PostConstruct注解@PreDestory注解
+
+```
+AutowiredAnnotationBeanPostProcessor 处理@AutoWired注解
+```
+
+为什么要增加这个applyMergedBeanDefinitionPostProcessors呢？有何意义？
+
+这里就是对注解的解析工作进行解析，并把信息保存下来，在接下来的初始化过程中就可以获取对应信息并进行赋值。
+
+### 这里xml中property配置了，字段上又加了Autowired的时候，是怎么处理的可以自己测试一下？ 未测试
+
+##### 5.很多同学在刚刚的步骤中说到了初始化，初始化包含了那些环节
+
+a填充属性
+
+b执行aware接口对应的方法
+
+c执行beanpostprocessor中的before方法
+
+d执行init-method
+
+e执行beanPostProcessor中的after方法
+
+上述步骤执行完成之后是为了获取到一个完整的成品对象，但是在初始化前我们能确定哪一个对象需要生成代理对象吗？
+
+不能确定，而且我们三级缓存只是一个回调机制，所以能否把所有的bean所需的创建代理对象的lambda表达式都放到三级缓存中？
+
+可以将所有的bean需要创建的代理对象的lambda表达式放到三级缓存中，后续如果我需要调用，直接从三级缓存中调用执行即可，如果不需要，在生成完整对象之后可以在三级缓存中把lanmda表达式给清除掉
+
+##### 6.我在什么时候生成具体的代理对象？
+
+a:在进行属性注入的时候，调用该对象生成的时候检测是否需要被代理，如果需要，直接创建代理对象
+
+b：在整个过程中，没有其他的对象有当前对象的依赖，那么在生成最终的完整对象之前生成代理对象即可(beanpostprocessor中的after方法中)
+
+提前暴露对象---二级缓存----只实例化但未初始化的对象
+
+三级缓存查找顺序？1-----2-----3
+
+有没有可能我直接从三级缓存跳过2级直接到达一级缓存？有可能
+
+### 如果单纯为了解决循环依赖的问题，那么使用二级缓存足够解决问题，三级缓存存在的意义是为了代理，如果没有代理对象，二级缓存足以解决问题
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
