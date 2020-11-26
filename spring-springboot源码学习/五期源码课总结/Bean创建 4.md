@@ -159,52 +159,83 @@ populateBean(beanName, mbd, instanceWrapper)对bean的属性进行填充，将�
 	需要在xml中配置 <property name="province" value="河北"></property>才会有值
 	mbd.getResolvedAutowireMode()获取 mbd 的 自动装配模式 根据获取到的值判断走根据类型还是根据名字自动注入
 	autowireByName(beanName, mbd, bw, newPvs);通过bw的PropertyDescriptor属性名，查找出对应的Bean对象，将其添加到
-	newPvs中
-		unsatisfiedNonSimpleProperties(mbd, bw);获取bw中有setter方法 && 非简单类型属性 && mbd的PropertyValues中没
-		有该pd的属性名的 PropertyDescriptor 属性名数组---就是一个熟悉筛选过程
-			如果 pd有写入属性方法，可以获取到一个set**方法 && 该pd不是被排除在依赖项检查之外 && pvs没有该pd的属性名 && pd
-			的属性类型不是"简单值类型"
-			pd.getWriteMethod() != null && !isExcludedFromDependencyCheck(pd) && !pvs.contains(pd.getName()) 
-			&&!BeanUtils.isSimpleProperty(pd.getPropertyType())
+	newPvs中unsatisfiedNonSimpleProperties(mbd, bw);获取bw中有setter方法 && 非简单类型属性 && 
+	mbd的PropertyValues中没有该pd的属性名的 PropertyDescriptor 属性名数组---就是一个熟悉筛选过程如果 
+	pd有写入属性方法，可以获取到一个set**方法 && 该pd不是被排除在依赖项检查之外 && pvs没有该pd的属性名 
+	&& pd的属性类型不是"简单值类型"
+			pd.getWriteMethod() != null && !isExcludedFromDependencyCheck(pd) && 
+		!pvs.contains(pd.getName())&&!BeanUtils.isSimpleProperty(pd.getPropertyType())
 		遍历属性名
-		containsBean(propertyName)---如果该bean工厂有propertyName的beanDefinition或外部注册的singleton实例
-		获取该工厂中propertyName的bean对象  Object bean = getBean(propertyName);
-		注册propertyName与beanName的依赖关系 registerDependentBean(propertyName, beanName);问？为什么要保存这个依赖
-		关系，就是为了下次或者多次创建的时候可以不用再次创建已经创建过的依赖
-	autowireByType(beanName, mbd, bw, newPvs);通过bw的PropertyDescriptor属性类型，查找出对应的Bean对象，将其添加到
-	newPvs中
-		获取工厂的自定义类型转换器getCustomTypeConverter() 如果有就使用自定义的类型转换器
-		 unsatisfiedNonSimpleProperties(mbd, bw);获取bw中有setter方法 && 非简单类型属性 && mbd的PropertyValues中没
+		containsBean(propertyName)---如果该bean工厂有propertyName的beanDefinition或外部注册的
+		singleton实例获取该工厂中propertyName的bean对象  Object bean = getBean(propertyName);
+		注册propertyName与beanName的依赖关系 registerDependentBean(propertyName, beanName);问？为什么要保存这个依赖关系，就是为了下次或者多次创建的时候可以不用再次创建已经创建过的依赖
+	autowireByType(beanName, mbd, bw, newPvs);通过bw的PropertyDescriptor属性类型，查找出对应的Bean对象，将其添加到newPvs中
+	获取工厂的自定义类型转换器getCustomTypeConverter() 如果有就使用自定义的类型转换器
+		 unsatisfiedNonSimpleProperties(mbd, bw);获取bw中有setter方法 && 非简单类型属性 && mbd
+		 的PropertyValues中没
 		 有该pd的属性名的 PropertyDescriptor 属性名数组
 		 遍历属性名数组
-		 1.bw.getPropertyDescriptor(propertyName)从bw中获取propertyName对应的PropertyDescriptor
-		 2.//eager为true时会导致初始化lazy-init单例和由FactoryBeans(或带有"factory-bean"引用的工厂方法)创建 的对象以进
-		 行类型检查boolean eager = !(bw.getWrappedInstance() instanceof PriorityOrdered);
-		 3.new AutowireByTypeDependencyDescriptor(methodParam, eager)将 methodParam 封装包装成
-		 AutowireByTypeDependencyDescriptor对象AutowireByTypeDependencyDescriptor:根据类型依赖自动注入的描述符，重
-		 写了 getDependencyName() 方法，使其永远返回null
-		 4.resolveDependency(desc, beanName, autowiredBeanNames, converter);根据据desc的依赖类型解析出与
-		 descriptor所包装的对象匹配的候选Bean对象
-	
+		 1.bw.getPropertyDescriptor(propertyName)从bw中获取propertyName对应的
+		 PropertyDescriptor
+		 2.//eager为true时会导致初始化lazy-init单例和由FactoryBeans(或带有"factory-bean"引用的工
+		 厂方法)创建 的对象以进行类型检查boolean eager = !(bw.getWrappedInstance() instanceof 
+		 PriorityOrdered);
+		 3.new AutowireByTypeDependencyDescriptor(methodParam, eager)将 methodParam 封装包
+		 装成AutowireByTypeDependencyDescriptor对象AutowireByTypeDependencyDescriptor:根据类
+		 型依赖自动注入的描述符，重写了 getDependencyName() 方法，使其永远返回null
+		 4.resolveDependency(desc, beanName, autowiredBeanNames, converter);根据据desc的依
+		 赖类型解析出与descriptor所包装的对象匹配的候选Bean对象
+		 	4.1 descriptor.initParameterNameDiscovery(getParameterNameDiscoverer());获取工
+		 	厂的参数名发现器，设置到descriptor中。使得descriptor初始化基础方法参数的参数名发现。此时，
+		 	该方法实际上并没有尝试检索参数名称；它仅允许发现再应用程序调用getDependencyName时发生
+		 	4.2 getAutowireCandidateResolver().getLazyResolutionProxyIfNecessary(
+					descriptor, requestingBeanName);尝试获取延迟加载代理对象
+			4.3 doResolveDependency(descriptor, requestingBeanName, autowiredBeanNames, 
+			typeConverter)解析出与descriptor所包装的对象匹配的候选Bean对象
+				4.3.1 ConstructorResolver.setCurrentInjectionPoint(descriptor);设置新得当前
+				切入点对象，得到旧的当前切入点对象
+				4.3.2 resolveMultipleBeans(descriptor, beanName, autowiredBeanNames, 
+				typeConverter)尝试针对desciptor所包装的对象类型是[stream,数组,Collection类型且对
+				象类型是接口,Map]的情况，进行解析与依赖类型匹配的候选Bean对象 针对desciptor所包装的对
+				象类型是[stream,数组,Collection类型且对象类型是接口,Map]的情况，进行解析与依赖类型匹
+				配的 候选Bean对象，并将其封装成相应的依赖类型对象
+				4.3.3 findAutowireCandidates(beanName, type, descriptor);尝试与type匹配的唯
+				一候选bean对象，查找与type匹配的候选bean对象,构建成Map，key=bean名,val=Bean对象
+3 hasInstantiationAwareBeanPostProcessors()	工厂是否拥有InstiationAwareBeanPostProcessor
+4.for (BeanPostProcessor bp : getBeanPostProcessors())遍历工厂内的所有后置处理器，就是处理之前解析@Autowired 注解@PostConstruct注解@PreDestory注解的beanDefinition赋值调用postProcessProperties方法进入inject方法
+如果工厂拥有InstiationAwareBeanPostProcessor,那么处理对应的流程，主要是对几个注解的赋值工作包含的两个关键子类是CommonAnnoationBeanPostProcessor,AutowiredAnnotationBeanPostProcessor
+5.checkDependencies(beanName, mbd, filteredPds, pvs);检查依赖项：主要检查pd的setter方法需要赋值时,pvs中有没有满足其pd的需求的属性值可供其赋值
+6.applyPropertyValues(beanName, mbd, bw, pvs);应用给定的属性值，解决任何在这个bean工厂运行时其他bean的引用。必须使用深拷贝，所以我们 不会永久地修改这个属性
 ```
 
+### autowireByType 和autowireByName，bytype可以出来properties  和map对象填充，byname不行
+
+#### 以下就是一个实例在for (BeanPostProcessor bp : getBeanPostProcessors())循环中AutowiredAnnotationBeanPostProcessor执行postProcessProperties方法的时候就会处理@Autowired自动注入的逻辑，会先创建personController------》注入personService-------》创建PersonService-------注入PersonDao------》创建PersonDao----再依次返回
+
+```
+上面在执行过程中会进入这个方法，创建bean然后又回到populateBean，从而达到这个依次注入的目的
+//如果instanceCandidate是Class实例
+if (instanceCandidate instanceof Class) {
+   //让instanceCandidate引用 descriptor对autowiredBeanName解析为该工厂的Bean实例
+   instanceCandidate = descriptor.resolveCandidate(autowiredBeanName, type, this);
+}
+```
+
+![image-20201126223730785](D:\GitHub\myProject\spring-springboot源码学习\images\image-20201126223730785.png)
+
+![image-20201126223803789](D:\GitHub\myProject\spring-springboot源码学习\images\image-20201126223803789.png)
 
 
 
 
 
+作业：完成一个自定义注解，实现autowired的功能，1.先让spring能够识别注解2.后续能够处理注解注入属性
 
+总结：这集课主要是讲的populateBean 填充属性，用来自 BeanDefinition的属性值填充给定的BeanWrapper中的bean实例
 
+# Bean创建过程 7
 
-
-
-
-
-
-
-
-
-
+##### applyPropertyValues(beanName, mbd, bw, pvs);应用给定的属性值，解决任何在这个bean工厂运行时其他bean的引用。必须使用深拷贝，所以我们 不会永久地修改这个属性----具体细节
 
 
 
