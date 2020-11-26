@@ -91,7 +91,7 @@ AutowiredAnnotationBeanPostProcessor 处理@AutoWired注解
 
 这里就是对注解的解析工作进行解析，并把信息保存下来，在接下来的初始化过程中就可以获取对应信息并进行赋值。
 
-### 这里xml中property配置了，字段上又加了Autowired的时候，是怎么处理的可以自己测试一下？ 未测试
+### 这里xml中property配置了，字段上又加了Autowired的时候，是怎么处理的可以自己测试一下？ 未测试  测试如果xml和autowired的id是不一样就会报错，一样会覆盖，使用xml中的
 
 ##### 5.很多同学在刚刚的步骤中说到了初始化，初始化包含了那些环节
 
@@ -125,9 +125,68 @@ b：在整个过程中，没有其他的对象有当前对象的依赖，那么�
 
 ### 如果单纯为了解决循环依赖的问题，那么使用二级缓存足够解决问题，三级缓存存在的意义是为了代理，如果没有代理对象，二级缓存足以解决问题
 
+# Bean创建过程 6
 
+上集回顾：
 
+注解处理 @PostConstruct注解@PreDestory    
 
+循环依赖的处理与理解
+
+## 本集内容
+
+填充属性----给属性赋值
+
+分类------基本数据类型-----直接完成赋值操作---四类八种-----类型转换
+
+​       --------引用类型-------从容器中获取具体的对象值，如果有，直接赋值，如果没有创建-----》注入方式
+
+​										------不注入
+
+​		注入的方式			-------按照类型完成注入
+
+​										--------按照名称完成注入
+
+​										--------按照构造器进行注入
+
+------集合属性 数组 list map set properties  应该既可能有基本数据类型 也可能有引用类型
+
+```
+populateBean(beanName, mbd, instanceWrapper)对bean的属性进行填充，将各个属性值注入，其中，可能存在依赖于其他bean的属性，则会递归初始化依赖的bean
+	if (!mbd.isSynthetic() && hasInstantiationAwareBeanPostProcessors()) 如果mdb是不是'syntheic' 且 工厂拥有InstiationAwareBeanPostProcessor  就进去执行方法
+	PropertyValues pvs = (mbd.hasPropertyValues() ? mbd.getPropertyValues() : null);PropertyValues：包含以一个
+	或多个PropertyValue对象的容器，通常包括针对特定目标Bean的一次更新//如果mdb有PropertyValues就获取其PropertyValues
+	需要在xml中配置 <property name="province" value="河北"></property>才会有值
+	mbd.getResolvedAutowireMode()获取 mbd 的 自动装配模式 根据获取到的值判断走根据类型还是根据名字自动注入
+	autowireByName(beanName, mbd, bw, newPvs);通过bw的PropertyDescriptor属性名，查找出对应的Bean对象，将其添加到
+	newPvs中
+		unsatisfiedNonSimpleProperties(mbd, bw);获取bw中有setter方法 && 非简单类型属性 && mbd的PropertyValues中没
+		有该pd的属性名的 PropertyDescriptor 属性名数组---就是一个熟悉筛选过程
+			如果 pd有写入属性方法，可以获取到一个set**方法 && 该pd不是被排除在依赖项检查之外 && pvs没有该pd的属性名 && pd
+			的属性类型不是"简单值类型"
+			pd.getWriteMethod() != null && !isExcludedFromDependencyCheck(pd) && !pvs.contains(pd.getName()) 
+			&&!BeanUtils.isSimpleProperty(pd.getPropertyType())
+		遍历属性名
+		containsBean(propertyName)---如果该bean工厂有propertyName的beanDefinition或外部注册的singleton实例
+		获取该工厂中propertyName的bean对象  Object bean = getBean(propertyName);
+		注册propertyName与beanName的依赖关系 registerDependentBean(propertyName, beanName);问？为什么要保存这个依赖
+		关系，就是为了下次或者多次创建的时候可以不用再次创建已经创建过的依赖
+	autowireByType(beanName, mbd, bw, newPvs);通过bw的PropertyDescriptor属性类型，查找出对应的Bean对象，将其添加到
+	newPvs中
+		获取工厂的自定义类型转换器getCustomTypeConverter() 如果有就使用自定义的类型转换器
+		 unsatisfiedNonSimpleProperties(mbd, bw);获取bw中有setter方法 && 非简单类型属性 && mbd的PropertyValues中没
+		 有该pd的属性名的 PropertyDescriptor 属性名数组
+		 遍历属性名数组
+		 1.bw.getPropertyDescriptor(propertyName)从bw中获取propertyName对应的PropertyDescriptor
+		 2.//eager为true时会导致初始化lazy-init单例和由FactoryBeans(或带有"factory-bean"引用的工厂方法)创建 的对象以进
+		 行类型检查boolean eager = !(bw.getWrappedInstance() instanceof PriorityOrdered);
+		 3.new AutowireByTypeDependencyDescriptor(methodParam, eager)将 methodParam 封装包装成
+		 AutowireByTypeDependencyDescriptor对象AutowireByTypeDependencyDescriptor:根据类型依赖自动注入的描述符，重
+		 写了 getDependencyName() 方法，使其永远返回null
+		 4.resolveDependency(desc, beanName, autowiredBeanNames, converter);根据据desc的依赖类型解析出与
+		 descriptor所包装的对象匹配的候选Bean对象
+	
+```
 
 
 
