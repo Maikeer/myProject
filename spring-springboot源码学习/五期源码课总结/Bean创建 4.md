@@ -1,3 +1,5 @@
+
+
 # Bean创建 4
 
 ##### AbstractAutoWireCapableBeanFactoty中createBeanInstance方法中
@@ -190,18 +192,11 @@ populateBean(beanName, mbd, instanceWrapper)对bean的属性进行填充，将�
 		 	该方法实际上并没有尝试检索参数名称；它仅允许发现再应用程序调用getDependencyName时发生
 		 	4.2 getAutowireCandidateResolver().getLazyResolutionProxyIfNecessary(
 					descriptor, requestingBeanName);尝试获取延迟加载代理对象
-			4.3 doResolveDependency(descriptor, requestingBeanName, autowiredBeanNames, 
-			typeConverter)解析出与descriptor所包装的对象匹配的候选Bean对象
-				4.3.1 ConstructorResolver.setCurrentInjectionPoint(descriptor);设置新得当前
-				切入点对象，得到旧的当前切入点对象
-				4.3.2 resolveMultipleBeans(descriptor, beanName, autowiredBeanNames, 
-				typeConverter)尝试针对desciptor所包装的对象类型是[stream,数组,Collection类型且对
-				象类型是接口,Map]的情况，进行解析与依赖类型匹配的候选Bean对象 针对desciptor所包装的对
-				象类型是[stream,数组,Collection类型且对象类型是接口,Map]的情况，进行解析与依赖类型匹
-				配的 候选Bean对象，并将其封装成相应的依赖类型对象
-				4.3.3 findAutowireCandidates(beanName, type, descriptor);尝试与type匹配的唯
-				一候选bean对象，查找与type匹配的候选bean对象,构建成Map，key=bean名,val=Bean对象
-3 hasInstantiationAwareBeanPostProcessors()	工厂是否拥有InstiationAwareBeanPostProcessor
+			4.3 doResolveDependency(descriptor, requestingBeanName, autowiredBeanNames, typeConverter)解析出与descriptor所包装的对象匹配的候选Bean对象
+				4.3.1 ConstructorResolver.setCurrentInjectionPoint(descriptor);设置新得当前切入点对象，得到旧的当前切入点对象
+				4.3.2 resolveMultipleBeans(descriptor, beanName, autowiredBeanNames,typeConverter)尝试针对desciptor所包装的对象类型是[stream,数组,Collection类型且对象类型是接口,Map]的情况，进行解析与依赖类型匹配的候选Bean对象 针对desciptor所包装的对象类型是[stream,数组,Collection类型且对象类型是接口,Map]的情况，进行解析与依赖类型匹配的 候选Bean对象，并将其封装成相应的依赖类型对象
+				4.3.3 findAutowireCandidates(beanName, type, descriptor);尝试与type匹配的唯一候选bean对象，查找与type匹配的候选bean对象,构建成Map，key=bean名,val=Bean对象
+3 !mbd.isSynthetic() && hasInstantiationAwareBeanPostProcessors()	如果mdb是不是'syntheic'且工厂拥有InstiationAwareBeanPostProcessor
 4.for (BeanPostProcessor bp : getBeanPostProcessors())遍历工厂内的所有后置处理器，就是处理之前解析@Autowired 注解@PostConstruct注解@PreDestory注解的beanDefinition赋值调用postProcessProperties方法进入inject方法
 如果工厂拥有InstiationAwareBeanPostProcessor,那么处理对应的流程，主要是对几个注解的赋值工作包含的两个关键子类是CommonAnnoationBeanPostProcessor,AutowiredAnnotationBeanPostProcessor
 5.checkDependencies(beanName, mbd, filteredPds, pvs);检查依赖项：主要检查pd的setter方法需要赋值时,pvs中有没有满足其pd的需求的属性值可供其赋值
@@ -236,6 +231,154 @@ if (instanceCandidate instanceof Class) {
 # Bean创建过程 7
 
 ##### applyPropertyValues(beanName, mbd, bw, pvs);应用给定的属性值，解决任何在这个bean工厂运行时其他bean的引用。必须使用深拷贝，所以我们 不会永久地修改这个属性----具体细节
+
+​	PropertyValues pvs必须要在xml配置中带有<property>标签才会有pvs
+
+先创建一个MutablePropertyValues（PropertyValues接口的默认实现。允许对属性进行简单操作，并提供构造函数来支持从映射 进行深度复制和构造），然后再把传入的pvs赋值给他，判断mpvs是否已经转换，如果已经转换就直接setPropertyValues然后返回，没有转换就回去getPropertyValueList赋值给original，接着用户自定义类型转换器，没有就把bw赋值给converter
+
+2.创建BeanDefinitionValueResolver在bean工厂实现中使用Helper类，它将beanDefinition对象中包含的值解析为应用于 目标bean实例的实际值
+
+3.List<PropertyValue> deepCopy  创建一个深拷贝，解析任何值引用，为了不影响其他对象
+
+4. resolveNecessary是否还需要解析标记
+
+5. ```
+   遍历属性，将属性转换为对应类的对应属性的类型 original
+   ```
+
+6.valueResolver.resolveValueIfNecessary(pv, originalValue) 交由valueResolver根据pv解析出originalValue所封装的对象
+
+7.可转换标记: propertyName是否bw中的可写属性 && prepertyName不是表示索引属性或嵌套属性（如果propertyName中有'.'||'['就认为是索引属性或嵌套属性）
+
+```
+boolean convertible = bw.isWritableProperty(propertyName) &&
+      !PropertyAccessorUtils.isNestedOrIndexedProperty(propertyName);
+```
+
+8.convertForProperty(resolvedValue, propertyName, bw, converter);将resolvedValue转换为指定的目标属性对象
+
+9.各种判断之后放入deepCopy中
+
+10.bw.setPropertyValues(new MutablePropertyValues(deepCopy));按原样使用deepCopy构造一个新的MutablePropertyValues对象然后设置到bw中以对bw的属性值更新
+
+### pupulateBean具体执行
+
+----1，调用postProcessAfterInstantiation方法完成属性赋值工作，可以直接终止后续的值处理工作，也可以让后续的属性完成覆盖操作，取决于自己----postProcessAfterInstantiation
+
+----2.根据配置文件的autowired属性来决定使用名称注入还是类型注入---aotowireByName和autowireByType
+
+----3.将对象中定义的@autowired注解进行解析，并完成对象或者属性注入----postProcessProperties---AutowiredAnnotationBeanPostProcessor
+
+---4.根据property标签定义的属性值，完成各种属性值的解析和赋值工作-----applyPropertyValues
+
+#### initializeBean 执行初始化逻辑
+
+ exposedObject = initializeBean(beanName, exposedObject, mbd)
+
+1.执行调用Aware接口对应的方法-----BeanNameAware、BeanClassLoaderAware，BeanFactoryAwaare
+
+2.执行before的初始化方法----ApplicationContextAwareProcessor，CommonAnnotationBeanPostProcessor，InitDestroyAnnotationBeanPostProcessor---@PostConstruct @PreDestroy
+
+3.调用执行init-method------实现了InitializingBean接口之后调用afterPropertiesSet方法
+
+​										------调用执行用户自定义初始化方法init-method
+
+4.执行after的初始化方法----AbstractAutoProxyCreator---AOP
+
+```
+invokeAwareMethods(beanName, bean);Aware接口处理器，调用BeanNameAware、BeanClassLoaderAware、beanFactoryAware
+为什么这里只处理这三个？因为在创建DefaultListableBeanFactory类时候父类忽略了要依赖的接口
+```
+
+```
+applyBeanPostProcessorsBeforeInitialization(wrappedBean, beanName);将BeanPostProcessors应用到给定的现有Bean实例，调用它们的postProcessBeforeInitialization初始化方法。  返回的Bean实例可能是原始Bean包装器
+```
+
+```
+invokeInitMethods 调用初始化方法，先调用bean的InitializingBean接口方法，后调用bean的自定义初始化方法
+调用bean的afterPropertiesSet方法 ((InitializingBean) bean).afterPropertiesSet();
+在bean上调用指定的自定义init方法 invokeCustomInitMethod(beanName, bean, mbd);
+```
+
+```
+applyBeanPostProcessorsAfterInitialization(wrappedBean, beanName);将BeanPostProcessors应用到给定的现有Bean实例，调用它们的postProcessAfterInitialization方法。返回的Bean实例可能是原始Bean包装器
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
