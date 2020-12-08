@@ -304,19 +304,48 @@ invokeInitMethods 调用初始化方法，先调用bean的InitializingBean接口
 applyBeanPostProcessorsAfterInitialization(wrappedBean, beanName);将BeanPostProcessors应用到给定的现有Bean实例，调用它们的postProcessAfterInitialization方法。返回的Bean实例可能是原始Bean包装器
 ```
 
+# bean的创建过程8及循环依赖
+
+```
+AbstractAutowireCapableBeanFactory类 740行开始
+```
+
+```
+earlySingletonExposure这个值是在前面添加三级缓存的时候的判断值
+Object earlySingletonReference = getSingleton(beanName, false); 从缓存中获取具体的对象
+// earlySingletonReference只有在检测到有循环依赖的情况下才会不为空
+if (earlySingletonReference != null) 什么时候这个值不为null？
+```
+
+```
+// 注册bean对象，方便后续在容器销毁的时候销毁对象
+registerDisposableBeanIfNecessary(beanName, bean, mbd);
+     registerDisposableBean(beanName,new DisposableBeanAdapter(bean, beanName, 
+     mbd, getBeanPostProcessors(), acc));
+     			// 注册一个一次性Bean实现来执行给定Bean的销毁工作：
+    			 DestructionAwareBeanPostProcessors 一次性Bean接口，自定义销毁方法。
+				// DisposableBeanAdapter：实际一次性Bean和可运行接口适配器，对给定Bean
+				实例执行各种销毁步骤
+				// 构建Bean对应的DisposableBeanAdapter对象，与beanName绑定到 注册中心
+				的一次性Bean列表中
+```
+
+#### 上面创建bean完成之后，就回到了DefaultSingletonBeanRegistry类 351行
+
+```
+afterSingletonCreation(beanName);创建单例后的回调,默认实现将单例标记为不在创建中这个是和前面的beforeSingletonCreation(beanName);创建单例之前的回调,默认实现将单例注册为当前正在创建中对应
+
+```
+
+#### bean生命周期
+
+![](D:\GitHub\myProject\spring-springboot源码学习\五期源码课总结\iamges\Bean的生命周期.jpg)
 
 
 
+#### 循环依赖问题
 
-
-
-
-
-
-
-
-
-
+![](D:\GitHub\myProject\spring-springboot源码学习\五期源码课总结\iamges\循环依赖问题.jpg)
 
 
 
