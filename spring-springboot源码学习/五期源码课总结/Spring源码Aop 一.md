@@ -105,11 +105,30 @@ registerBeanPostProcessors(beanFactory);注册bean处理器，这里只是注册
 
 #### 下次进入实例化finishBeanFactoryInitialization(beanFactory);
 
+```
+preInstantiateSingletons-----》getbean-----doGetBean-----createBean-----
+resolveBeforeInstantiation给BeanPostProcessors一个机会来返回代理来替代真正的实例，应用实例化前的前置处理器--------》applyBeanPostProcessorsBeforeInstantiation----postProcessBeforeInstantiation------AbstractAutoProxyCreator、AnnotationAwareAspectJAutoProxyCreator中的isInfrastructureClass和shouldSkip方法
+关键方法shouldSkip方法
+```
 
+```
+protected boolean shouldSkip(Class<?> beanClass, String beanName) {
+   // TODO: Consider optimization by caching the list of the aspect names
+   List<Advisor> candidateAdvisors = findCandidateAdvisors();这个方法是关键
+   寻找所有Advisor.class的bean名字，如果存在就放入缓存，并进行创建，然后返回
+   for (Advisor advisor : candidateAdvisors) {
+      if (advisor instanceof AspectJPointcutAdvisor &&
+            ((AspectJPointcutAdvisor) advisor).getAspectName().equals(beanName)) {
+         return true;
+      }
+   }
+   return super.shouldSkip(beanClass, beanName);
+}
+```
 
-
-
-
+```
+AnnotationAwareAspectJAutoProxyCreator类中的findCandidateAdvisors
+```
 
 
 
