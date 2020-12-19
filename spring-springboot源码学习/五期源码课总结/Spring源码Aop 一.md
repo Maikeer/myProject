@@ -127,26 +127,72 @@ protected boolean shouldSkip(Class<?> beanClass, String beanName) {
 ```
 
 ```
-AnnotationAwareAspectJAutoProxyCreator类中的findCandidateAdvisors
+AnnotationAwareAspectJAutoProxyCreator类中的findCandidateAdvisors找到系统中实现了Advisor接口的bean
+
 ```
 
+#### 有两种方式进行实例化
+
+1.调用无参构造方法-----------实例化对象-------set设置属性值-----------填充属性
+
+2.调用有参构造方法创建对象------------在执行之前必须要把构造器中需要的对象提前创建好----------会包含无数个嵌套的环节
 
 
 
+##### AbstractAutoProxyCreator类中的advisedBeans变量需要记住，之后会有很多对它使用的地方
+
+// 要跳过的直接设置FALSE
+this.advisedBeans.put(cacheKey, Boolean.FALSE);
+
+#### 从左向右创建，但是必须要把右边的对象创建成功之后左边的对象才能创建
+
+创建AspectJPontcutAdvisor--------------》AspectJAroundAdvice--------------3个参数 Method  AspectjExpressPointcut  AspectInstanceFactory
+
+#### AspectjPointcutAdvisor具体创建步骤
+
+##### 1.创建AspectjPointcutAdvisor#0-4，先使用i带参构造方法进行对象的创建，但是想使用带参数的构造方法，必须先把参数对象准备好，因此要准备创建内置包含的对象AspectjPointcutAdvice
+
+##### 2.创建AspectjPointcutAdvice，也需要使用带参数的构造方法进行创建，也需要提前准备好具体的参数对象，包含三个参数
+
+```
+AspectJExpressionPointcut  
+AspectInstanceFactory SimpleBeanFactoryAwareAspectInstanceFactory
+Method  MethodLocatingFactoryBean
+```
+
+##### 3.分别创建上述单个对象，上述三个对象的创建过程都是调用无参的构造方法，直接反射生成即可
+
+```
+// 以下情况符合其一即可进入
+		// 1、存在可选构造方法
+		// 2、自动装配模型为构造函数自动装配
+		// 3、给BeanDefinition中设置了构造参数值
+		// 4、有参与构造函数参数列表的参数
+autowireConstructor(beanName, mbd, ctors, args);这里是有参构造方法进入处理的方法
+---resolveConstructorArguments(beanName, mbd, bw, cargs, resolvedValues)进入这个方法处理找到具体的构造方法-----valueResolver.resolveValueIfNecessary使用valueResolver解析出valueHolder实例的构造函数参数值所封装的对象------resolveInnerBean(argName, innerBeanName, bd)根据innerBeanName和bd解析出内部Bean对象
+```
+
+#### 以下是对上面innerBeanName的解释，具体如何生成的innerBeanName
+
+```
+//拼装内部Bean名:"(inner bean)#"+bd的身份哈希码的十六进制字符串形式
+String innerBeanName = "(inner bean)" + BeanFactoryUtils.GENERATED_BEAN_NAME_SEPARATOR +
+      ObjectUtils.getIdentityHexString(bd);
+```
+
+##### 上面的处理都是shouldSkip方法中findCandidateAdvisors中的super.findCandidateAdvisors()处理过程
+
+##### 下面这个过程是处理注解的过程找到系统中使用@Aspect标注的bean，并且找到该bean中使用@Before，@After等标注的方法将这些方法封装为一个个Advisor
+
+```
+advisors.addAll(this.aspectJAdvisorsBuilder.buildAspectJAdvisors());
+```
+
+#### 以上的方法都是在创建LogUtil过程中进入resolveBeforeInstantiation(beanName, mbdToUse)方法---进入applyBeanPostProcessorsBeforeInstantiation方法----进入ibp.postProcessBeforeInstantiation----进入shouldSkip(beanClass, beanName)进行的操作  就是查看该类是否跳过动态代理
 
 
 
-
-
-
-
-
-
-
-
-
-
-
+shouldSkip方法中findCandidateAdvisors执行完成之后，接下就是执行
 
 
 
