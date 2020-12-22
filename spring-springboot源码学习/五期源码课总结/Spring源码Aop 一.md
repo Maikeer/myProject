@@ -194,6 +194,78 @@ advisors.addAll(this.aspectJAdvisorsBuilder.buildAspectJAdvisors());
 
 shouldSkip方法中findCandidateAdvisors执行完成之后，接下就是执行
 
+# AOP核心对象的创建2
+
+上面在shouldSkip中关于LogUtil类不需要创建代理被跳过判断完成之后，就会进入doCreateBean方法中
+
+```
+resolveBeforeInstantation方法是给BeanPostProcessors一个机会来返回代理来替代真正的实例，应用实例化前的前置处理器用于用户自定义动态代理的方式，而针对于当前（这种配置文件AOP代理的情况）的被代理类需要经过标准的代理流程来创建
+```
+
+```
+在initializeBean方法中因为mbd.isSynthetic()为false（一般是指只有AOP相关的prointCut配置或者Advice配置才会将 synthetic设置为true）会进入applyBeanPostProcessorsBeforeInitialization方法
+```
+
+#### 当使用spring的aop的时候，需要进行n多个对象的创建，但是在创建过程中需要很多判断，判断当前对象是否需要被代理，而代理之前，需要advisor对象必须要提前创建好，才能进行后续的判断
+
+##### 如果定义了一个普通的对象，会进入resolveBeforeInstantation（）方法的处理吗？会进入
+
+接下来创建myCalculator类的时候就是需要创建代理对象的，还是会进入resolveBeforeInstantation方法，该方法中虽然需要代理，但是该方法中并不会创建代理对象，该情况的代理是需要经过标准的代理流程来创建----》所以进入doCreateBean方法中-----initializeBean方法中去再次进入applyBeanPostProcessorsBeforeInitialization方法中这个里面就会进入AbstractAutoProxyCreator类中postProcessAfterInitialization方法------->wrapIfNecessary方法中shouldSkip方法就不会跳过-----》getAdvicesAndAdvisorsForBean方法-----》findEligibleAdvisors方法------》findAdvisorsThatCanApply方法-----》AopUtils.findAdvisorsThatCanApply方法------》canApply(candidate, clazz, hasIntroductions)这个方法-----》canApply(pca.getPointcut(), targetClass, hasIntroductions)是否匹配切点表达式信息
+
+```
+canApply(candidate, clazz, hasIntroductions)对于普通bean的处理，根据你的表达式expression=execution( Integer com.mashibing.aop.service.MyCalculator.*(..))进入判断，先从类再到方法  比如ClassFilter和MethodMatcher
+```
+
+```
+findEligibleAdvisors方法中---》对需要代理的Advisor按照一定的规则进行排序  sortAdvisors(eligibleAdvisors)
+```
+
+##### findEligibleAdvisors方法中extendAdvisors(eligibleAdvisors);会在advices里面添加一个
+
+##### ExposeInvocationInterceptor用于传递MethodInvocation方便获取到MethodInvocation
+
+### 总结前面的
+
+![](D:\GitHub\myProject\spring-springboot源码学习\五期源码课总结\iamges\aop创建代理对象前的准备工作.jpg)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
