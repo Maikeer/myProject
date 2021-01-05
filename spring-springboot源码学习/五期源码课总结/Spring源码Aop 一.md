@@ -228,15 +228,59 @@ findEligibleAdvisors方法中---》对需要代理的Advisor按照一定的规�
 
 ![](D:\GitHub\myProject\spring-springboot源码学习\五期源码课总结\iamges\aop创建代理对象前的准备工作.jpg)
 
+# 拦截器链的执行 二十六节
 
+```
+MyCalculator bean = ac.getBean(MyCalculator.class);
+bean.add(1,1);
+```
 
+以上方法执行的时候真正调用的是代理对象中对应的intercept方法，也就是CglibAopProxy中的DynamicAdvisedInterceptor的intercept方法
 
+```
+// 从advised中获取配置好的AOP通知
+List<Object> chain = this.advised.getInterceptorsAndDynamicInterceptionAdvice(method, targetClass);
+-------------》
+// 调用的是advisorChainFactory的getInterceptorsAndDynamicInterceptionAdvice方法
+			cached = this.advisorChainFactory.getInterceptorsAndDynamicInterceptionAdvice(
+					this, method, targetClass);
+					
+---------------》
+方法中首先
+1.// 这里用了一个单例模式 获取DefaultAdvisorAdapterRegistry实例
+		// 在Spring中把每一个功能都分的很细，每个功能都会有相应的类去处理 符合单一职责原则的地方很多 这也是值得我们借鉴的一个地方
+		// AdvisorAdapterRegistry这个类的主要作用是将Advice适配为Advisor 将Advisor适配为对应的MethodInterceptor
+		AdvisorAdapterRegistry registry = GlobalAdvisorAdapterRegistry.getInstance();
+2.获取advisors 循环目标方法匹配的通知，里面会经过一系列判断并到达registry.getInterceptors(advisor)方法（拦截器链是通过AdvisorAdapterRegistry来加入的，这个AdvisorAdapterRegistry对advice织入具备很大的作用）它里面有三个适配器（MethodBeforeAdviceAdapter，AfterReturningAdviceAdapterThrowsAdviceAdapter）起了作用的
+-----------------》
+通过上面的方法获取到了拦截器链并在new CglibMethodInvocation(proxy, target, method, args, targetClass, chain, methodProxy).proceed()进行执行，通过cglibMethodInvocation来启动advice通知
+```
 
+#### 
 
+#### ThrowsAdviceAdapter存在的意思是为什么？为什么要这么设计？一切都是为了扩展
 
+就是为了当我们需要自定义的时候，可以根据adapter规则然后自定义自己的interceptor
 
+![image-20210105210731049](D:\GitHub\myProject\spring-springboot源码学习\五期源码课总结\iamges\image-20210105210731049.png)
 
+创建CglibMethodInvocation对象调用proceed()方法-------》ReflectiveMethodInvocation父类才是真正的调用者，递归获取通知，然后执行
 
+-----------------------》获取拦截器依次执行，循环调用proceed()
+
+和以下图片执行逻辑是一样的
+
+![](D:\GitHub\myProject\spring-springboot源码学习\五期源码课总结\iamges\image-20210105204508135.png)
+
+### 全注解aop解析过程
+
+全注解和xml配置的aop执行到最后打印出来的顺序是不一样的,为什么？
+
+因为拓扑排序造成的，只有around和after执行顺序不一样，所以打印结果也不一样，但是不会影响具体执行的逻辑以及结果
+
+为什么他们的顺序是不一致的，因为xml中是以下标作为order来排序的，但是具体拓扑排序的时候是没有用到这个下标order的，所以还是因为拓扑排序造成的执行顺序不一样
+
+![image-20210105220735467](D:\GitHub\myProject\spring-springboot源码学习\五期源码课总结\iamges\image-20210105220735467.png)
 
 
 
