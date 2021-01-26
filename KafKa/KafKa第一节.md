@@ -84,3 +84,6 @@ pagecache就是作用在当前面橙色数据在前面消费的时候，紫色�
 
 ![image-20210126224007598](D:\GitHub\myProject\KafKa\images\image-20210126224007598.png)
 
+# KafKa第五节
+
+1.索引 2. 消费者，数据可靠性  3.时间戳 自定义消费数据----》本质：seek
