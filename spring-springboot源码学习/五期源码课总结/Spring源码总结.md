@@ -107,7 +107,7 @@ Spring源码总结
 8. initApplicationEventMulticaster 初始化事件监听多路广播事件
 	8.1有自定义的就用自定义的，没有就用默认的SimpleApplicationEventMulticaster
 9. onRefresh 留给子类初始化其他的bean
-10. registerListeners 注册监听器
+10. registerListeners 注册监听器 为了方便接收广播的事件
 11. finishBeanFactoryInitialization 实例化所有非懒加载的单列对象
     11.1 实例化转换器服务，添加嵌入的解析器，初始化代理织入的前期准备，固定配置（设置以后不再需要改变的）
     11.2 preInstantiateSingletons 实例化单列对象 RootBeanDefinition 
